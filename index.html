@@ -167,12 +167,67 @@
     .small { color: var(--muted); font-size: .92rem; }
     .top-link { display: inline-block; margin-top: .8rem; font-size: .9rem; }
     footer { padding: 1.5rem 1rem; text-align: center; color: var(--muted); }
+    [hidden] { display: none !important; }
+    .toc-grid { gap: .75rem; }
+    .toc a { display: block; padding: 1rem; border: 1px solid #b7cce1; border-radius: 12px; background: #f2f7fe; font-weight: 700; min-height: 64px; }
+    .course-nav, .learning-steps { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
+    .course-nav a { padding: .5rem .8rem; border-radius: 8px; background: var(--blue-soft); text-decoration: none; font-weight: 700; }
+    .learning-steps button { flex: 1 1 150px; background: white; color: var(--blue); border: 2px solid #b7cce1; }
+    .learning-steps button[aria-pressed="true"] { background: var(--blue); color: white; border-color: var(--blue); }
+    .learning-panel { padding: clamp(.75rem, 2vw, 1.25rem); border: 2px solid #b7cce1; border-radius: 14px; background: #f5f9ff; }
+    .learning-panel[data-step="understand"] { border-color: #91bea9; background: #f3faf6; }
+    .learning-panel[data-step="practice"] { border-color: #d4b268; background: #fffbf0; }
+    .step-heading { margin: 0 0 .75rem; font-size: 1.3rem; }
+    .lesson-card { margin: 1rem 0; padding: 1rem; border: 1px solid #abc6b8; border-radius: 12px; background: white; }
+    .lesson-card summary { min-height: 44px; display: list-item; color: var(--green); font-size: 1.05rem; }
+    .lesson-card .visual { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .lesson-card .visual svg { margin: auto; }
+    .visual svg text { stroke: none; }
+    .chapter > .chapter-summary { color: var(--muted); max-width: 65ch; }
+    .discovery { margin: 0; background: white; border: 0; padding: .25rem; }
+    .discovery-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: .8rem; }
+    .discovery-controls > label { display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: .8rem; border: 1px solid #c3d4e5; border-radius: 10px; background: #f5f9ff; }
+    .discovery-controls input[type="range"] { grid-column: 1/-1; width: 100%; min-height: 44px; }
+    .discovery-controls output { padding: .1rem .45rem; border-radius: 6px; background: #dceafb; }
+    .discovery-controls input[type="radio"] { width: 24px; min-height: 24px; }
+    .discovery-visual, .visual svg { width: min(100%, 560px); overflow: hidden; }
+    .diagram-note { margin: .5rem 0; color: var(--muted); font-size: .95rem; }
+    .discovery-result { margin: 1rem 0; border-left: 4px solid var(--blue); font-size: 1.05rem; }
+    .discovery-feedback { padding: .8rem; border: 1px dashed #96bfa7; border-radius: 10px; background: #f0faf4; color: #174e36; }
+    .discovery-bar { position: relative; height: 40px; margin: 1rem 0 .3rem; border: 2px solid #4d657e; border-radius: 4px; background: #ecf0f5; }
+    .discovery-bar::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), #344b6570 calc(10% - 1px) 10%); }
+    .discovery-bar > span { border-radius: 0; }
+    .bar-scale { display: flex; justify-content: space-between; font-weight: 700; }
+    .discovery-grid { gap: 0; border: 3px solid #126342; width: fit-content; max-width: 100%; }
+    .discovery-grid span { width: clamp(18px, 5vw, 32px); aspect-ratio: 1; border-radius: 0; }
+    .discovery-bars { height: 190px; gap: .5rem; margin-bottom: 3rem; border-left: 2px solid #344b65; overflow: visible; }
+    .discovery-bars > span { position: relative; min-width: 0; }
+    .die-count { position: absolute; bottom: calc(100% + 4px); color: var(--ink); font-weight: 700; }
+    .die-label { position: absolute; top: calc(100% + 8px); color: var(--ink); font-weight: 700; white-space: nowrap; }
+    .model-tiles, .rule-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: .6rem; margin: 1rem 0; }
+    .model-tile, .rule-card { padding: .75rem; border: 2px solid #b7cce1; border-radius: 9px; background: #edf5ff; text-align: center; }
+    .rule-card.pass { border-color: #25834f; background: #eaf6ef; }
+    .practice { margin: 0; padding: .25rem; box-shadow: none; background: transparent; border: 0; }
+    .practice-controls { padding: .8rem; background: #fff4d8; border-radius: 10px; align-items: center; }
+    .practice-controls select { max-width: 100%; }
+    .question-card { margin-top: 1.25rem; padding: clamp(1rem, 3vw, 1.5rem); border: 3px solid #859db7; box-shadow: 0 6px 18px #17283f0c; }
+    .question-title { margin: .6rem 0 1rem; line-height: 1.5; }
+    .question-visual { margin: 1rem 0; padding: .75rem; border: 1px solid #c3d4e5; border-radius: 10px; background: #f5f9ff; }
+    .question-visual svg { display: block; width: min(100%, 400px); margin: auto; }
+    .answer-row { display: grid; grid-template-columns: minmax(0, 1fr); padding: 1rem 0; border-top: 2px dashed #c3d4e5; }
+    .answer-row input { max-width: none; width: 100%; }
+    .answer-row label { font-weight: 700; }
+    .feedback { border-top: 2px solid #b7cce1; }
+    .paper-task { padding: .85rem; margin: .8rem 0; background: #f5f9ff; border: 1px solid #c3d4e5; border-radius: 10px; }
+    input:focus-visible, select:focus-visible { outline: 3px solid #d48a10; outline-offset: 3px; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
     @media (max-width: 600px) {
       .hero { padding-top: 2.5rem; padding-bottom: 2.5rem; }
       .layout { width: min(100% - 1rem, 1100px); margin-top: .5rem; }
       .intro, .chapter, .toc { border-radius: 11px; }
     }
     @media print {
+      .course-nav, .learning-steps, .step-next { display: none; }
       body { background: white; font-size: 11pt; }
       .hero { padding: 1cm; color: black; background: white; border-bottom: 2px solid #333; }
       .hero a { color: black; }
@@ -413,11 +468,12 @@
       <p>Multiplizierst oder dividierst du Zähler und Nenner mit derselben Zahl (nicht 0), bleibt der Wert gleich. Erweitern hilft beim Vergleichen und Addieren; Kürzen macht einen Bruch einfacher.</p>
       <span class="formula">2/3 = 4/6 &nbsp;&nbsp;&nbsp; 12/18 = 2/3</span>
       <div class="visual">
-        <svg viewBox="0 0 280 190" role="img" aria-labelledby="pie-title pie-desc">
+        <svg viewBox="0 0 360 200" role="img" aria-labelledby="pie-title pie-desc">
           <title id="pie-title">Kreisbild für den Bruch drei Viertel</title>
           <desc id="pie-desc">Ein Kreis ist in vier gleich große Stücke geteilt. Drei Stücke sind blau, ein Stück ist hellblau.</desc>
           <circle cx="95" cy="95" r="70" fill="#dce8f5" stroke="#243d59" stroke-width="3"/>
           <path d="M95 95 L95 25 A70 70 0 1 1 25 95 Z" fill="#2873b9"/>
+          <path d="M95 25V165M25 95H165" fill="none" stroke="#243d59" stroke-width="3"/>
           <path d="M95 25 A70 70 0 0 1 165 95" fill="none" stroke="#243d59" stroke-width="3"/>
           <path d="M165 95 A70 70 0 0 1 95 165" fill="none" stroke="#243d59" stroke-width="3"/>
           <path d="M95 165 A70 70 0 0 1 25 95" fill="none" stroke="#243d59" stroke-width="3"/>
@@ -620,14 +676,17 @@
         <h3>Entdeckerstation: Finde das Gleichgewicht</h3>
         <p class="discovery-intro">Die Waage steht für eine Gleichung. Verändere x: Wann sind linke und rechte Seite gleich schwer?</p>
         <div class="discovery-controls"><label for="equation-x">Wert von x <input id="equation-x" data-control="equation-x" type="range" min="0" max="10" value="4"><output data-out="equation-x">4</output></label></div>
-        <svg class="discovery-visual" viewBox="0 0 360 150" role="img" aria-label="Waage vergleicht 2x plus 3 mit 11">
+        <svg class="discovery-visual" viewBox="0 0 360 170" role="img" aria-label="Waage vergleicht 2x plus 3 mit 11">
           <path d="M180 45L155 120H205Z" fill="#e6c768" stroke="#634b12" stroke-width="3"/>
-          <line x1="60" y1="55" x2="300" y2="55" stroke="#344b65" stroke-width="8" stroke-linecap="round" data-visual="balance-beam"/>
+          <g data-visual="balance-beam">
+          <line x1="60" y1="55" x2="300" y2="55" stroke="#344b65" stroke-width="8" stroke-linecap="round"/>
           <line x1="85" y1="55" x2="85" y2="95" stroke="#344b65" stroke-width="3"/><line x1="275" y1="55" x2="275" y2="95" stroke="#344b65" stroke-width="3"/>
           <path d="M50 95H120L108 112H62Z" fill="#dcecfb" stroke="#1456a0" stroke-width="3"/>
           <path d="M240 95H310L298 112H252Z" fill="#fce9be" stroke="#98701b" stroke-width="3"/>
           <text x="85" y="88" text-anchor="middle" font-size="17" fill="#17283f" data-visual="left-pan">2x + 3</text>
           <text x="275" y="88" text-anchor="middle" font-size="17" fill="#17283f">11</text>
+          </g>
+          <text x="180" y="151" text-anchor="middle" font-size="15" fill="#17283f">Die Seite mit dem größeren Wert sinkt.</text>
         </svg>
         <p class="discovery-result" data-out="equation-result" aria-live="polite"></p>
         <p class="discovery-feedback">Aha-Frage: Was musst du mit x machen, damit 2x + 3 genau 11 wird?</p>
@@ -657,13 +716,14 @@
         <h3>Entdeckerstation: Beobachte, wie ein Winkel wächst</h3>
         <p class="discovery-intro">Verändere den Winkel. Der bewegliche Schenkel dreht sich mit. Ordne den Winkel mit Hilfe der Grenze von 90° ein.</p>
         <div class="discovery-controls"><label for="angle-size">Winkel <output data-out="angle-size">45°</output><input id="angle-size" data-control="angle-size" type="range" min="0" max="180" value="45"></label></div>
-        <svg class="discovery-visual" viewBox="0 0 260 180" role="img" aria-label="Verstellbarer Winkel zwischen 0 und 180 Grad">
-          <line x1="35" y1="145" x2="220" y2="145" stroke="#344b65" stroke-width="5"/>
-          <line x1="35" y1="145" x2="35" y2="20" stroke="#b9c8d7" stroke-width="2" stroke-dasharray="5 5"/>
-          <path d="M95 145 A60 60 0 0 0 77 103" fill="none" stroke="#e59c22" stroke-width="4" data-visual="angle-arc"/>
-          <line x1="35" y1="145" x2="95" y2="145" stroke="#1456a0" stroke-width="5" data-visual="angle-ray"/>
-          <circle cx="35" cy="145" r="6" fill="#17283f"/>
-          <text x="42" y="28" font-size="15" fill="#17283f" data-visual="angle-label">45°</text>
+        <svg class="discovery-visual" viewBox="0 0 320 200" role="img" aria-label="Verstellbarer Winkel zwischen 0 und 180 Grad">
+          <line x1="160" y1="155" x2="290" y2="155" stroke="#344b65" stroke-width="5"/>
+          <line x1="160" y1="155" x2="160" y2="25" stroke="#b9c8d7" stroke-width="2" stroke-dasharray="5 5"/>
+          <text x="169" y="23" font-size="15" fill="#506578">90°</text>
+          <path fill="none" stroke="#e59c22" stroke-width="4" data-visual="angle-arc"/>
+          <line x1="160" y1="155" x2="245" y2="70" stroke="#1456a0" stroke-width="5" data-visual="angle-ray"/>
+          <circle cx="160" cy="155" r="6" fill="#17283f"/>
+          <text x="160" y="188" text-anchor="middle" font-size="17" fill="#17283f" data-visual="angle-label">45°</text>
         </svg>
         <p class="discovery-result" data-out="angle-result" aria-live="polite"></p>
         <p class="discovery-feedback">Aha-Frage: Bei welchem Wert ist der bewegliche Schenkel genau senkrecht zum Grundschenkel?</p>
@@ -689,18 +749,18 @@
       </table></div>
       <div class="example"><strong>Rechteck-Beispiel:</strong> Länge 8 cm, Breite 3 cm. Umfang: U = 2 · (8 + 3) cm = 22 cm. Fläche: A = 8 · 3 cm² = 24 cm².</div>
       <div class="visual">
-        <svg viewBox="0 0 390 170" role="img" aria-labelledby="area-title area-desc">
+        <svg viewBox="0 0 390 190" role="img" aria-labelledby="area-title area-desc">
           <title id="area-title">Rechteck aus acht Spalten und drei Reihen</title>
           <desc id="area-desc">Ein Rechteck mit 8 Spalten und 3 Reihen von Einheitsquadraten. Insgesamt sind es 24 Quadrate.</desc>
           <defs>
-            <pattern id="unit-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+            <pattern id="unit-grid" x="40" y="38" width="36" height="36" patternUnits="userSpaceOnUse">
               <rect width="36" height="36" fill="#dcecfb" stroke="#1456a0" stroke-width="2"/>
             </pattern>
           </defs>
           <rect x="40" y="38" width="288" height="108" fill="url(#unit-grid)" stroke="#1456a0" stroke-width="3"/>
           <text x="184" y="26" text-anchor="middle" fill="#17283f" font-family="system-ui,sans-serif" font-size="16">8 cm</text>
           <text x="18" y="98" text-anchor="middle" fill="#17283f" font-family="system-ui,sans-serif" font-size="16" transform="rotate(-90 18 98)">3 cm</text>
-          <text x="184" y="166" text-anchor="middle" fill="#17283f" font-family="system-ui,sans-serif" font-size="16">8 Spalten · 3 Reihen = 24 cm²</text>
+          <text x="184" y="176" text-anchor="middle" fill="#17283f" font-family="system-ui,sans-serif" font-size="16">8 Spalten · 3 Reihen = 24 cm²</text>
         </svg>
         <p><strong>Fläche zählt Quadrat-Einheiten:</strong> Das Rechteck besteht aus 8 Spalten mit je 3 Quadraten. Also sind es 8 · 3 = 24 Quadrate. Bei Seitenlängen in Zentimetern heißen die Flächeneinheiten cm².</p>
       </div>
@@ -737,7 +797,7 @@
       <span class="formula">Wahrscheinlichkeit = Anzahl günstiger Ergebnisse / Anzahl aller möglichen Ergebnisse</span>
       <div class="example"><strong>Beispiel:</strong> Bei einem fairen sechsseitigen Würfel ist die Wahrscheinlichkeit für eine gerade Zahl 3/6 = 1/2 = 50 %, denn 2, 4 und 6 sind drei günstige Ergebnisse von sechs.</div>
       <div class="discovery" data-lab="chance">
-        <h3>Entdeckerstation: Wird der Würfel mit vielen Würfen fair?</h3>
+        <h3>Entdeckerstation: Wie oft fällt jede Zahl?</h3>
         <p class="discovery-intro">Wirf den digitalen Würfel. Bei wenigen Würfen schwanken die Ergebnisse oft. Mit vielen Würfen kannst du die Häufigkeiten vergleichen.</p>
         <div class="discovery-controls"><button type="button" data-action="roll-die">Würfel 10-mal werfen</button><button type="button" data-action="reset-die">Neu anfangen</button></div>
         <div class="discovery-bars" data-visual="die-bars" role="img" aria-label="Balkendiagramm der Würfelhäufigkeiten"></div>
@@ -839,7 +899,7 @@
         task("Zahlen und Runden", "Leicht", "Welche Zahl ist 100 größer als 2 345?", "2445", "2 345 + 100 = 2 445. Ein Hunderter mehr verändert die Hunderterstelle.", ["Addiere, statt abzuziehen.", "100 sind zehn Zehner oder ein Hunderter.", "Beginne bei 2 345 und gehe auf dem Zahlenstrahl 100 nach rechts."]),
         task("Zahlen und Runden", "Mittel", "Runde 6 748 auf den nächsten Hunderter.", "6700", "Die Zehnerstelle ist 4. Weil sie kleiner als 5 ist, runden wir ab: 6 700.", ["Beim Runden auf Hunderter schaust du auf die Zehnerstelle.", "Die Zehnerstelle ist 4.", "Bei 0, 1, 2, 3 oder 4 wird abgerundet."]),
         task("Zahlen und Runden", "Knifflig", "Welche ist größer: 0,7 oder 0,68? Tippe die größere Zahl ein.", "0.7", "Schreibe 0,7 als 0,70. Dann siehst du: 70 Hundertstel sind mehr als 68 Hundertstel.", ["Ergänze bei 0,7 hinten eine Null.", "Vergleiche danach die Hundertstel.", "70 Hundertstel sind größer als 68 Hundertstel."]),
-        task("Zahlen und Runden", "Mittel", "Wie lautet 4 308 in Worten? Tippe die Zahl ein, die 4 Tausender, 3 Hunderter und 8 Einer hat.", "4308", "4 000 + 300 + 8 = 4 308. Die fehlenden Zehner werden als 0 geschrieben.", ["Jede Ziffer besetzt einen Stellenwert.", "Zwischen den Hundertern und Einern fehlt eine Zehnerziffer.", "Setze an die Zehnerstelle eine 0."]),
+        task("Zahlen und Runden", "Mittel", "Tippe die Zahl ein, die 4 Tausender, 3 Hunderter und 8 Einer hat.", "4308", "4 000 + 300 + 8 = 4 308. Die fehlenden Zehner werden als 0 geschrieben.", ["Jede Ziffer besetzt einen Stellenwert.", "Zwischen den Hundertern und Einern fehlt eine Zehnerziffer.", "Setze an die Zehnerstelle eine 0."]),
 
         task("Grundrechenarten", "Leicht", "Berechne: 347 + 128.", "475", "347 + 100 = 447 und 447 + 28 = 475.", ["Zerlege 128 in 100 und 28.", "Addiere zuerst 347 + 100.", "Addiere anschließend noch 28."]),
         task("Grundrechenarten", "Leicht", "Berechne: 600 − 275.", "325", "600 − 200 = 400 und 400 − 75 = 325.", ["Ziehe zuerst die Hunderter ab.", "Zerlege 275 in 200 und 75.", "400 − 75 = 325."]),
@@ -956,13 +1016,17 @@
         return [numerator / divisor, denominator / divisor];
       }
 
-      function isCorrect(input, expected) {
+      function isCorrect(input, expected, requireReducedFraction = false) {
         const given = rational(input);
         const answer = rational(expected);
+        if (requireReducedFraction) {
+          const parts = input.trim().replace(/\s+/g, "").match(/^(\d+)\/(\d+)$/);
+          if (!parts || BigInt(parts[2]) === 0n || gcd(BigInt(parts[1]), BigInt(parts[2])) !== 1n) return false;
+        }
         return given !== null && answer !== null && given[0] === answer[0] && given[1] === answer[1];
       }
 
-      function renderQuestion() {
+      function renderQuestion(focusAnswer = true) {
         const item = sessionTasks[currentIndex];
         questionCard.hidden = false;
         questionCard.className = "question-card";
@@ -971,6 +1035,7 @@
         questionLevel.textContent = item.level;
         questionLevel.className = `level level-${item.level === "Leicht" ? "easy" : item.level === "Mittel" ? "medium" : "hard"}`;
         questionText.textContent = item.question;
+        renderTaskPicture(item);
         answerInput.value = "";
         answerInput.disabled = false;
         checkButton.disabled = false;
@@ -979,7 +1044,7 @@
         solutionButton.hidden = true;
         feedback.className = "feedback";
         feedback.replaceChildren();
-        answerInput.focus();
+        if (focusAnswer) answerInput.focus({ preventScroll: true });
         progress.textContent = `Aufgabe ${currentIndex + 1} von ${sessionTasks.length} · Beim ersten Versuch richtig: ${firstTryCorrect}`;
       }
 
@@ -997,19 +1062,21 @@
         questionCard.style.borderColor = borderColor;
       }
 
-      startButton.addEventListener("click", () => {
+      function startPractice(focusAnswer = true) {
         const topic = topicSelect.value;
-        sessionTasks = topic === "alle" ? [...tasks] : tasks.filter((item) => item.topic === topic);
+        const level = document.getElementById("level-select")?.value || "alle";
+        sessionTasks = tasks.filter(item => (topic === "alle" || item.topic === topic) && (level === "alle" || item.level === level));
         currentIndex = 0;
         firstTryCorrect = 0;
         hadMistake = false;
         if (sessionTasks.length === 0) {
-          progress.textContent = "Für dieses Thema sind noch keine Aufgaben vorhanden.";
+          progress.textContent = "In dieser Stufe gibt es hier keine Aufgabe. Wähle „Alle Stufen“ oder eine andere Stufe.";
           questionCard.hidden = true;
           return;
         }
-        renderQuestion();
-      });
+        renderQuestion(focusAnswer);
+      }
+      startButton.addEventListener("click", () => startPractice());
 
       answerForm.addEventListener("submit", (event) => {
         event.preventDefault();
@@ -1023,7 +1090,7 @@
           return;
         }
         answerInput.removeAttribute("aria-invalid");
-        if (isCorrect(answer, item.answer)) {
+        if (isCorrect(answer, item.answer, /kürze/i.test(item.question))) {
           if (!hadMistake) firstTryCorrect += 1;
           setCardState("correct", "#e7f7ed", "#16824d");
           feedback.className = "feedback feedback-correct";
@@ -1092,6 +1159,47 @@
       const control = (lab, key) => lab.querySelector(`[data-control="${key}"]`);
       const number = (lab, key) => Number(control(lab, key).value);
 
+      function setDiagram(lab, name, markup, description) {
+        let diagram = lab.querySelector(`[data-diagram="${name}"]`);
+        if (!diagram) {
+          diagram = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          diagram.classList.add("discovery-visual");
+          diagram.dataset.diagram = name;
+          diagram.setAttribute("viewBox", "0 0 480 160");
+          diagram.setAttribute("role", "img");
+          lab.querySelector(".discovery-controls").after(diagram);
+        }
+        diagram.setAttribute("aria-label", description);
+        diagram.innerHTML = markup;
+      }
+
+      function numberLineMarkup(min, max, start, finish, step) {
+        const x = value => 32 + (value - min) / (max - min) * 416;
+        const ticks = [];
+        for (let value = min; value <= max; value += step) {
+          ticks.push(`<path d="M${x(value)} 80v10" stroke="#344b65"/><text x="${x(value)}" y="115" text-anchor="middle" font-size="20" fill="#17283f">${value}</text>`);
+        }
+        const direction = finish >= start ? 1 : -1;
+        const arrow = start === finish ? "" : `<path d="M${x(start)} 58H${x(finish)}l${-direction * 9} -6m${direction * 9} 6l${-direction * 9} 6" fill="none" stroke="#1456a0" stroke-width="3"/>`;
+        return `<line x1="32" y1="80" x2="448" y2="80" stroke="#344b65" stroke-width="3"/>${ticks.join("")}
+          <circle cx="${x(start)}" cy="80" r="6" fill="#98701b"/>
+          ${arrow}
+          <circle cx="${x(finish)}" cy="80" r="7" fill="#1456a0"/>
+          <text x="32" y="25" font-size="20" fill="#98701b">Start: ${start}</text>
+          <text x="448" y="25" text-anchor="end" font-size="20" fill="#1456a0">Ziel: ${finish}</text>`;
+      }
+
+      function modelBox(lab, name) {
+        let box = lab.querySelector(`[data-model="${name}"]`);
+        if (!box) {
+          box = document.createElement("div");
+          box.className = "model-tiles";
+          box.dataset.model = name;
+          lab.querySelector(".discovery-controls").after(box);
+        }
+        return box;
+      }
+
       function updateDiscovery(lab) {
         switch (lab.dataset.lab) {
           case "round": {
@@ -1099,7 +1207,10 @@
             const rounded = Math.floor((value + 50) / 100) * 100;
             output(lab, "round-number", numberFormat.format(value));
             output(lab, "round-result", `${numberFormat.format(value)} wird auf Hunderter zu ${numberFormat.format(rounded)} gerundet. Die Mitte zwischen den Hundertern ist ${numberFormat.format(Math.floor(value / 100) * 100 + 50)}.`);
-            lab.querySelector('[data-visual="round-marker"]').style.left = `${((value - 1240) / 20) * 100}%`;
+            lab.querySelector(".discovery-track").hidden = true;
+            setDiagram(lab, "round", numberLineMarkup(1200, 1300, value, rounded, 50) +
+              '<path d="M240 35V95" stroke="#98701b" stroke-dasharray="4 4"/><text x="240" y="145" text-anchor="middle" font-size="15" fill="#98701b">Mitte: 1250 → ab hier aufrunden</text>',
+              `Zahlenstrahl von 1200 bis 1300. ${value} wird zu ${rounded} gerundet. Die Mitte ist 1250.`);
             break;
           }
           case "operations": {
@@ -1109,16 +1220,34 @@
             const ones = a % 10;
             output(lab, "factor-a", String(a));
             output(lab, "factor-b", String(b));
+            const unit = 8, left = 85, top = 45;
+            const cells = Array.from({length: a * b}, (_, index) => {
+              const column = index % a, row = Math.floor(index / a);
+              return `<rect x="${left + column * unit}" y="${top + row * unit}" width="${unit}" height="${unit}" fill="${column < tens ? "#bdd7f0" : "#b4dfc9"}" stroke="#344b65" stroke-width=".5"/>`;
+            });
+            setDiagram(lab, "multiplication", `${cells.join("")}<text x="240" y="24" text-anchor="middle" font-size="18" fill="#17283f">${a} Spalten = ${tens} + ${ones}</text><text x="10" y="80" font-size="16" fill="#17283f">${b} Reihen</text><text x="240" y="150" text-anchor="middle" font-size="16" fill="#17283f">Blau: Zehner · Grün: Einer · 1 Kästchen = 1</text>`,
+              `${b} Reihen mit je ${a} Kästchen. ${tens} blaue und ${ones} grüne Spalten.`);
+            const boxes = modelBox(lab, "multiplication");
+            boxes.replaceChildren(...[tens, ones].map(part => {
+              const box = document.createElement("div");
+              box.className = "model-tile";
+              box.innerHTML = `<strong>${part} · ${b}</strong><p>${Array.from({length: b}, () => part).join(" + ")}</p><strong>${part * b}</strong>`;
+              return box;
+            }));
             output(lab, "operation-result", `${a} · ${b} = (${tens} · ${b}) + (${ones} · ${b}) = ${tens * b} + ${ones * b} = ${a * b}. Die Zahl ${a} wurde in ${tens} und ${ones} zerlegt.`);
             break;
           }
           case "divisibility": {
             const field = control(lab, "div-number");
-            const value = Math.trunc(Number(field.value));
-            if (!field.value || !Number.isFinite(value)) {
-              output(lab, "div-result", "Tippe eine ganze Zahl ein, dann untersuchen wir ihre Teilbarkeit.");
+            const value = Number(field.value);
+            const box = modelBox(lab, "divisibility");
+            if (!field.value || !Number.isInteger(value) || value < 10 || value > 999) {
+              field.setAttribute("aria-invalid", "true");
+              box.replaceChildren();
+              output(lab, "div-result", "Gib eine ganze Zahl von 10 bis 999 ein.");
               break;
             }
+            field.removeAttribute("aria-invalid");
             const sum = [...String(Math.abs(value))].reduce((total, digit) => total + Number(digit), 0);
             const rules = [
               [2, Math.abs(value) % 2 === 0, `letzte Ziffer ${String(Math.abs(value)).at(-1)} ist gerade`],
@@ -1127,6 +1256,12 @@
               [10, Math.abs(value) % 10 === 0, `letzte Ziffer ist 0`]
             ];
             const applicable = rules.filter(([, passes]) => passes).map(([divisor]) => divisor);
+            box.replaceChildren(...rules.map(([divisor, passes, reason]) => {
+              const card = document.createElement("div");
+              card.className = `rule-card${passes ? " pass" : ""}`;
+              card.textContent = `Durch ${divisor}: ${passes ? "Ja ✓" : "Nein ✗"}. ${passes ? "Regel erfüllt: " : "Regel nicht erfüllt: "}${reason}.`;
+              return card;
+            }));
             output(lab, "div-result", `${value}: Quersumme ${sum}. Teilbar durch ${applicable.length ? applicable.join(", ") : "keine der Zahlen 2, 3, 5 oder 10"}.`);
             break;
           }
@@ -1140,7 +1275,9 @@
             output(lab, "fraction-numerator", String(numerator));
             output(lab, "fraction-denominator", String(denominator));
             const slice = 360 / denominator;
-            lab.querySelector('[data-visual="fraction-pie"]').style.background = `repeating-conic-gradient(from 0deg, transparent 0deg ${slice - 1}deg, #243d59 ${slice - 1}deg ${slice}deg), conic-gradient(#2873b9 0 ${percent}%, #dce8f5 ${percent}% 100%)`;
+            const pie = lab.querySelector('[data-visual="fraction-pie"]');
+            pie.style.background = `repeating-conic-gradient(from 0deg, transparent 0deg ${slice - 1}deg, #243d59 ${slice - 1}deg ${slice}deg), conic-gradient(#2873b9 0 ${percent}%, #dce8f5 ${percent}% 100%)`;
+            pie.setAttribute("aria-label", `${numerator} von ${denominator} gleich großen Stücken blau: ${numerator}/${denominator}.`);
             output(lab, "fraction-result", `${numerator} von ${denominator} gleichen Stücken sind gefärbt: ${numerator}/${denominator} ≈ ${percent.toLocaleString("de-DE", { maximumFractionDigits: 1 })} %.`);
             break;
           }
@@ -1157,7 +1294,8 @@
             const finish = start + move;
             output(lab, "negative-start", start < 0 ? `−${Math.abs(start)}` : String(start));
             output(lab, "negative-move", `${move > 0 ? "+" : move < 0 ? "−" : ""}${Math.abs(move)}`);
-            lab.querySelector('[data-visual="negative-marker"]').style.left = `${((Math.max(-8, Math.min(8, finish)) + 8) / 16) * 100}%`;
+            lab.querySelector(".discovery-track").hidden = true;
+            setDiagram(lab, "negative", numberLineMarkup(-16, 16, start, finish, 4), `Zahlenstrahl von −16 bis 16. Start ${start}, ${move} Schritte, Ziel ${finish}.`);
             output(lab, "negative-result", `Start ${start} ${move < 0 ? "−" : "+"} ${Math.abs(move)} Schritte = ${finish}. ${move > 0 ? "Positive Schritte führen nach rechts." : move < 0 ? "Negative Schritte führen nach links." : "Ohne Schritte bleibt der Startwert gleich."}`);
             break;
           }
@@ -1170,6 +1308,13 @@
               area: [`${amount} m²`, `${numberFormat.format(amount * 10000)} cm²`, "1 m² ist ein Quadrat von 100 cm mal 100 cm: 100 · 100 = 10 000 cm²."],
               volume: [`${amount} m³`, `${numberFormat.format(amount * 1000000)} cm³`, "1 m³ ist ein Würfel von 100 cm mal 100 cm mal 100 cm: 100 · 100 · 100 = 1 000 000 cm³."]
             }[kind];
+            const shapes = {
+              length: '<path d="M60 95H390" stroke="#1456a0" stroke-width="6"/><path d="M60 80v30M390 80v30" stroke="#1456a0" stroke-width="3"/>',
+              area: '<rect x="145" y="25" width="115" height="105" fill="#dcecfb" stroke="#1456a0" stroke-width="3"/><path d="M145 60H260M145 95H260M183 25V130M222 25V130" stroke="#1456a0"/>',
+              volume: '<path d="M160 60l55 -35 85 20 -55 35z" fill="#dcecfb" stroke="#1456a0"/><path d="M160 60v70l85 10V80z" fill="#bdd7f0" stroke="#1456a0"/><path d="M245 80l55 -35v70l-55 25z" fill="#8cb9e3" stroke="#1456a0"/>'
+            };
+            setDiagram(lab, "units", `${shapes[kind]}<text x="240" y="156" text-anchor="middle" fill="#17283f" font-size="16">${kind === "length" ? "1 Richtung: × 100" : kind === "area" ? "2 Richtungen: × 100 × 100" : "3 Richtungen: × 100 × 100 × 100"}</text>`,
+              details[2]);
             output(lab, "unit-result", `${details[0]} = ${details[1]}. ${details[2]}`);
             break;
           }
@@ -1188,7 +1333,9 @@
             const left = 2 * x + 3;
             const difference = left - 11;
             const beam = lab.querySelector('[data-visual="balance-beam"]');
-            beam.setAttribute("transform", `rotate(${Math.max(-12, Math.min(12, difference * 2))} 180 55)`);
+            beam.setAttribute("transform", `rotate(${Math.max(-12, Math.min(12, -difference * 2))} 180 55)`);
+            lab.querySelector('[data-visual="left-pan"]').textContent = `2 · ${x} + 3 = ${left}`;
+            beam.closest("svg").setAttribute("aria-label", `Waage: links ${left}, rechts 11. ${difference === 0 ? "Gleichgewicht." : difference > 0 ? "Links sinkt nach unten." : "Rechts sinkt nach unten."}`);
             output(lab, "equation-x", String(x));
             output(lab, "equation-result", `Links: 2 · ${x} + 3 = ${left}; rechts: 11. ${left === 11 ? "Die Waage ist im Gleichgewicht – x = 4 löst die Gleichung." : left < 11 ? `Links fehlen noch ${11 - left}.` : `Links sind ${left - 11} zu viel.`}`);
             break;
@@ -1196,7 +1343,7 @@
           case "geometry": {
             const angle = number(lab, "angle-size");
             const radians = angle * Math.PI / 180;
-            const centerX = 35, centerY = 145, radius = 120;
+            const centerX = 160, centerY = 155, radius = 120;
             const endX = centerX + radius * Math.cos(radians);
             const endY = centerY - radius * Math.sin(radians);
             lab.querySelector('[data-visual="angle-ray"]').setAttribute("x2", String(endX));
@@ -1207,7 +1354,8 @@
             lab.querySelector('[data-visual="angle-arc"]').setAttribute("d", `M ${centerX + arcRadius} ${centerY} A ${arcRadius} ${arcRadius} 0 0 0 ${arcX} ${arcY}`);
             output(lab, "angle-size", `${angle}°`);
             lab.querySelector('[data-visual="angle-label"]').textContent = `${angle}°`;
-            const kind = angle < 90 ? "spitzer Winkel" : angle === 90 ? "rechter Winkel" : angle < 180 ? "stumpfer Winkel" : "gestreckter Winkel";
+            const kind = angle === 0 ? "Nullwinkel" : angle < 90 ? "spitzer Winkel" : angle === 90 ? "rechter Winkel" : angle < 180 ? "stumpfer Winkel" : "gestreckter Winkel";
+            lab.querySelector("svg").setAttribute("aria-label", `${angle} Grad: ${kind}. Der blaue Schenkel dreht sich gegen den Uhrzeigersinn.`);
             const comparison = angle === 90
               ? "Der Schenkel steht genau senkrecht."
               : angle < 90
@@ -1235,6 +1383,17 @@
             const quantity = number(lab, "story-quantity");
             const price = number(lab, "story-price");
             const extra = number(lab, "story-extra");
+            const tickets = modelBox(lab, "tickets");
+            tickets.replaceChildren(...Array.from({length: quantity}, (_, index) => {
+              const ticket = document.createElement("div");
+              ticket.className = "model-tile";
+              ticket.textContent = `Karte ${index + 1}: ${price} €`;
+              return ticket;
+            }));
+            const trip = document.createElement("div");
+            trip.className = "model-tile";
+            trip.textContent = `Fahrt für alle: ${extra} € (einmal)`;
+            tickets.append(trip);
             output(lab, "story-quantity", String(quantity));
             output(lab, "story-price", `${price} €`);
             output(lab, "story-extra", `${extra} €`);
@@ -1253,8 +1412,13 @@
           bars.replaceChildren(...dieCounts.map((_, index) => {
             const bar = document.createElement("span");
             bar.dataset.die = String(index);
-            bar.style.height = "5%";
-            bar.textContent = `${index + 1}: 0`;
+            bar.style.height = "0%";
+            const count = document.createElement("b");
+            count.className = "die-count";
+            const label = document.createElement("b");
+            label.className = "die-label";
+            label.textContent = String(index + 1);
+            bar.append(count, label);
             bar.setAttribute("aria-label", `${index + 1}: 0 Würfe`);
             return bar;
           }));
@@ -1262,14 +1426,13 @@
         const maxCount = Math.max(1, ...dieCounts);
         dieCounts.forEach((count, index) => {
           const bar = bars.querySelector(`[data-die="${index}"]`);
-          bar.style.height = `${Math.max(5, (count / maxCount) * 100)}%`;
-          bar.textContent = `${index + 1}: ${count}`;
+          bar.style.height = `${(count / maxCount) * 100}%`;
+          bar.querySelector(".die-count").textContent = String(count);
           bar.setAttribute("aria-label", `${index + 1}: ${count} Würfe`);
         });
+        bars.setAttribute("aria-label", `Würfelhäufigkeiten. ${dieCounts.map((count, index) => `Zahl ${index + 1}: ${count} Würfe`).join("; ")}. Alle Säulen haben dieselbe Skala: größte Häufigkeit ${maxCount}.`);
         if (dieThrows > 0) {
-          const highest = Math.max(...dieCounts);
-          const lowest = Math.min(...dieCounts);
-          output(lab, "chance-result", `${dieThrows} Würfe. Erwartungswert: ungefähr ${Math.round(dieThrows / 6)} pro Zahl. Tatsächlich: ${dieCounts.join(", ")}. Die Häufigkeiten müssen nach einer kleinen Zahl von Würfen nicht gleich sein.`);
+          output(lab, "chance-result", `${dieThrows} Würfe insgesamt. Über jeder Säule steht die Anzahl. Auf lange Sicht erwarten wir etwa ${Math.round(dieThrows / 6)} Würfe je Zahl – nicht unbedingt genau gleich viele.`);
         }
       }
 
@@ -1304,12 +1467,283 @@
         updateDiscovery(lab);
       });
 
-      document.querySelectorAll(".chapter details").forEach((exercise) => {
-        exercise.hidden = true;
-      });
+      buildLearningCourse();
 
       if (tasks.some((item) => item.tips.length !== 3)) {
         throw new Error("Jede interaktive Aufgabe muss genau drei Tipps enthalten.");
+      }
+
+      function renderTaskPicture(item) {
+        let picture = document.getElementById("question-visual");
+        if (!picture) {
+          picture = document.createElement("div");
+          picture.id = "question-visual";
+          picture.className = "question-visual";
+          questionText.after(picture);
+        }
+        picture.replaceChildren();
+        const fraction = item.question.match(/(\d+)\/(\d+)/);
+        if (item.topic === "Brüche" && fraction && Number(fraction[1]) <= Number(fraction[2])) {
+          const numerator = Number(fraction[1]), denominator = Number(fraction[2]);
+          const diagram = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          diagram.setAttribute("viewBox", "0 0 360 90");
+          diagram.setAttribute("role", "img");
+          diagram.setAttribute("aria-label", `Der erste Bruch aus der Aufgabe: ${numerator}/${denominator}. ${numerator} von ${denominator} Teilen sind blau.`);
+          diagram.innerHTML = Array.from({length: denominator}, (_, index) => `<rect x="${15 + index * 330 / denominator}" y="12" width="${330 / denominator}" height="40" fill="${index < numerator ? "#2873b9" : "#e5edf6"}" stroke="#344b65"/>`).join("") +
+            `<text x="180" y="78" text-anchor="middle" font-size="16" fill="#17283f">Erster Bruch: ${numerator} von ${denominator} gleichen Teilen</text>`;
+          picture.append(diagram);
+        } else {
+          const label = document.createElement("strong");
+          label.textContent = `Deine Aufgabe · ${item.topic}`;
+          picture.append(label);
+        }
+        answerInput.removeAttribute("aria-invalid");
+        document.getElementById("answer-format").textContent = /kürze/i.test(item.question)
+          ? "Tippe einen vollständig gekürzten Bruch mit / ein, zum Beispiel 3/4."
+          : item.answer.includes("/")
+          ? "Tippe den Bruch mit / ein, zum Beispiel 3/4. Gleichwertige Brüche zählen auch."
+          : item.question.includes("1 für Ja")
+            ? "Tippe 1 für Ja oder 0 für Nein."
+            : "Tippe eine Zahl ein. Komma oder Punkt sind erlaubt. Die Einheit steht in der Aufgabe.";
+      }
+
+      function buildLearningCourse() {
+        const chapterInfo = [
+          ["zahlen", "Zahlen und Runden", "Runde eine Zahl. Beobachte, was bei der Mitte passiert.", "Runden ausprobieren"],
+          ["grundrechenarten", "Grundrechenarten", "Zerlege eine Multiplikation in zwei einfache Rechnungen.", "Zehner und Einer getrennt rechnen"],
+          ["teilbarkeit", "Teilbarkeit", "Finde heraus, durch welche Zahlen du ohne Rest teilen kannst.", "Ohne Rest teilen"],
+          ["brueche", "Brüche", "Ein Ganzes, gleiche Stücke: Verändere deinen Bruch.", "Deinen Bruch färben"],
+          ["dezimalzahlen", "Dezimalzahlen", "Zähle die gefärbten Zehntel und lies die Dezimalzahl.", "Zehntel zählen"],
+          ["negative-zahlen", "Negative Zahlen", "Starte auf dem Zahlenstrahl und gehe nach links oder rechts.", "Auf dem Zahlenstrahl gehen"],
+          ["groessen", "Größen und Einheiten", "Vergleiche Länge, Fläche und Volumen: Wie oft wird umgerechnet?", "Einheiten sichtbar umrechnen"],
+          ["prozent", "Prozent und Zuordnungen", "Wie viel ist ein Anteil vom Ganzen?", "Prozentanteile verändern"],
+          ["terme", "Terme und Gleichungen", "Finde die Zahl x, bei der beide Seiten gleich viel wert sind.", "Die Waage ausgleichen"],
+          ["geometrie", "Geometrie", "Drehe einen Schenkel und beobachte die Winkelgröße.", "Einen Winkel drehen"],
+          ["flaechen-volumen", "Fläche und Volumen", "Zähle die Kästchen innen und miss den Rand außen.", "Fläche und Umfang vergleichen"],
+          ["daten", "Daten und Zufall", "Wirf den Würfel und vergleiche die sechs Häufigkeiten.", "Würfeln und Säulen lesen"],
+          ["strategien", "Sachaufgaben", "Kartenkosten und Fahrtkosten: Was rechnest du zuerst?", "Eine Geschichte verändern"],
+          ["check", "alle", "Prüfe dein Wissen – ein Rechenschritt nach dem anderen.", "Punkt vor Strich prüfen"]
+        ];
+        const practice = document.getElementById("interaktiv-ueben");
+        practice.querySelector("h2").textContent = "3 · Üben: eine Aufgabe nach der anderen";
+        practice.querySelector("p").textContent = "Wähle eine Stufe. Tippe deine Antwort ein und prüfe sie. Bei einem Fehler helfen dir drei Tipps.";
+        const difficulty = document.createElement("label");
+        difficulty.htmlFor = "level-select";
+        difficulty.textContent = "Schwierigkeit";
+        const select = document.createElement("select");
+        select.id = "level-select";
+        for (const [value, text] of [["alle", "Alle Stufen"], ["Leicht", "Leicht"], ["Mittel", "Mittel"], ["Knifflig", "Knifflig"]]) {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = text;
+          select.append(option);
+        }
+        difficulty.append(select);
+        startButton.before(difficulty);
+        select.addEventListener("change", () => startPractice(false));
+        topicSelect.addEventListener("change", () => startPractice(false));
+        startButton.textContent = "Aufgaben neu starten";
+
+        const intro = document.querySelector(".intro");
+        const guide = document.createElement("details");
+        const guideTitle = document.createElement("summary");
+        guideTitle.textContent = "Lerntipps, Schwierigkeitsstufen und Hinweise für Erwachsene";
+        guide.append(guideTitle);
+        while (intro.children.length > 1) guide.append(intro.children[1]);
+        const short = document.createElement("p");
+        short.textContent = "Wähle unten ein Thema. 1: Probiere aus. 2: Schau dir eine Erklärung an. 3: Löse eine Aufgabe. Du kannst jederzeit zurückgehen.";
+        intro.append(short, guide);
+        const sources = document.getElementById("quellen").closest("section");
+        const sourceDetails = document.createElement("details");
+        const sourceTitle = document.createElement("summary");
+        sourceTitle.textContent = "Bildungsplan und Quellen (für Erwachsene)";
+        sourceDetails.append(sourceTitle);
+        while (sources.children.length) sourceDetails.append(sources.firstElementChild);
+        sources.append(sourceDetails);
+        let printState = [];
+        window.addEventListener("beforeprint", () => {
+          printState = [...document.querySelectorAll(".chapter, .learning-panel, .chapter details")].map(element => ({element, hidden: element.hidden, open: element.open}));
+          printState.forEach(({element}) => { element.hidden = false; if (element.tagName === "DETAILS") element.open = true; });
+        });
+        window.addEventListener("afterprint", () => {
+          printState.forEach(({element, hidden, open}) => { element.hidden = hidden; if (element.tagName === "DETAILS") element.open = open; });
+          printState = [];
+        });
+
+        const linePicture = document.querySelector("#zahlen .visual");
+        document.querySelector("#negative-zahlen .discovery").before(linePicture);
+        linePicture.querySelector("title").textContent = "Zahlenstrahl mit Zahlen von −4 bis 4";
+
+        for (const [id, topic, description, discoveryTitle] of chapterInfo) {
+          const chapter = document.getElementById(id);
+          const heading = chapter.querySelector("h2");
+          heading.tabIndex = -1;
+          heading.id = `${id}-title`;
+          chapter.setAttribute("aria-labelledby", heading.id);
+          const discovery = chapter.querySelector(".discovery");
+          discovery.querySelector("h3").textContent = discoveryTitle;
+          const steps = document.createElement("div");
+          steps.className = "learning-steps";
+          steps.setAttribute("role", "group");
+          steps.setAttribute("aria-label", "Lernschritt wählen");
+          const panels = new Map();
+          for (const [key, title] of [["discover", "1 · Entdecken"], ["understand", "2 · Verstehen"], ["practice", "3 · Üben"]]) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = title;
+            button.dataset.step = key;
+            const panel = document.createElement("div");
+            panel.className = "learning-panel";
+            panel.dataset.step = key;
+            panel.id = `${id}-${key}`;
+            panel.setAttribute("role", "region");
+            panel.setAttribute("aria-label", title);
+            button.setAttribute("aria-controls", panel.id);
+            panels.set(key, panel);
+            button.addEventListener("click", () => showStep(key));
+            steps.append(button);
+          }
+          panels.get("discover").append(discovery);
+          const explain = panels.get("understand");
+          let card;
+          for (const node of [...chapter.children]) {
+            if (node === heading) continue;
+            if (node.tagName === "DETAILS") {
+              const exercises = panels.get("practice");
+              node.querySelectorAll("li").forEach(item => item.classList.add("paper-task"));
+              const solution = [...node.children].find(item => item.tagName === "P" && item.textContent.trim().startsWith("Lösungen:"));
+              if (solution) {
+                const disclosure = document.createElement("details");
+                const label = document.createElement("summary");
+                label.textContent = "Lösungen erst nach dem eigenen Versuch ansehen";
+                disclosure.append(label, solution);
+                node.append(disclosure);
+              }
+              exercises.append(node);
+              continue;
+            }
+            if (!card || node.tagName === "H3") {
+              card = document.createElement("details");
+              card.className = "lesson-card";
+              const summary = document.createElement("summary");
+              summary.textContent = node.tagName === "H3" ? node.textContent : "Die Grundidee – kurz erklärt";
+              card.append(summary);
+              explain.append(card);
+              if (node.tagName === "H3") { node.remove(); continue; }
+            }
+            card.append(node);
+          }
+          const brief = document.createElement("p");
+          brief.className = "chapter-summary";
+          brief.textContent = description;
+          const back = document.createElement("div");
+          back.className = "course-nav";
+          const link = document.createElement("a");
+          link.href = "#inhaltsverzeichnis";
+          link.textContent = "← Alle Themen";
+          back.append(link);
+          chapter.append(back, heading, brief, steps, ...panels.values());
+          for (const [key, next, text] of [["discover", "understand", "Weiter: Erklärung ansehen →"], ["understand", "practice", "Jetzt eine Aufgabe lösen →"]]) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "step-next";
+            button.textContent = text;
+            button.addEventListener("click", () => { showStep(next); steps.querySelector(`[data-step="${next}"]`).focus(); });
+            panels.get(key).append(button);
+          }
+          function showStep(key) {
+            for (const [name, panel] of panels) panel.hidden = name !== key;
+            steps.querySelectorAll("button").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.step === key)));
+            if (key === "practice") {
+              if (practice.parentElement !== panels.get(key)) {
+                panels.get(key).prepend(practice);
+                topicSelect.value = topic;
+                topicSelect.closest("label").hidden = topic !== "alle";
+                select.value = "alle";
+                startPractice(false);
+              }
+              practice.hidden = false;
+            }
+          }
+          chapter.showLearningStep = showStep;
+          showStep("discover");
+        }
+        function route() {
+          const id = decodeURIComponent(location.hash.slice(1));
+          const selected = document.getElementById(id);
+          const chapter = selected?.closest(".chapter");
+          document.querySelectorAll(".chapter").forEach(item => item.hidden = item !== chapter);
+          document.querySelector(".toc").hidden = Boolean(chapter);
+          intro.hidden = Boolean(chapter);
+          sources.hidden = Boolean(chapter);
+          practice.hidden = true;
+          if (chapter) {
+            chapter.showLearningStep(id === "interaktiv-ueben" ? "practice" : "discover");
+            if (location.hash) chapter.querySelector("h2").focus({preventScroll: true});
+            chapter.scrollIntoView({block: "start", behavior: "instant"});
+          } else if (id === "inhaltsverzeichnis") {
+            document.querySelector(".toc").scrollIntoView({block: "start", behavior: "instant"});
+          }
+        }
+        window.addEventListener("hashchange", route);
+        route();
+        const barDescriptions = {decimal: ["0", "1 Ganzes = 10 Zehntel"], percent: ["0 %", "100 % = die ganze Grundmenge"]};
+        for (const [labName, labels] of Object.entries(barDescriptions)) {
+          const bar = document.querySelector(`[data-lab="${labName}"] .discovery-bar`);
+          bar.removeAttribute("aria-hidden");
+          const scale = document.createElement("div");
+          scale.className = "bar-scale";
+          labels.forEach(text => { const label = document.createElement("span"); label.textContent = text; scale.append(label); });
+          bar.after(scale);
+        }
+        const area = document.querySelector('[data-lab="area"]');
+        const note = document.createElement("p");
+        note.className = "diagram-note";
+        note.textContent = "Ein blaues Kästchen = 1 Flächeneinheit. Der grüne Außenrand zeigt den Umfang.";
+        area.querySelector(".discovery-grid").after(note);
+        const briefs = {
+          round: "Ziehe den Regler über 1250. Beobachte den Sprung von 1200 zu 1300.",
+          operations: "Verändere einen Faktor. Blau zeigt die Zehner, Grün die Einer.",
+          divisibility: "Tippe eine Zahl von 10 bis 999 ein. Die Karten zeigen: teilbar oder nicht?",
+          fraction: "Wähle alle Stücke (Nenner), dann die blauen Stücke (Zähler).",
+          decimal: "Färbe Zehntel mit dem Regler. Zehn Kästchen bilden ein Ganzes.",
+          negative: "Wähle den Start. Plus geht nach rechts, Minus nach links.",
+          units: "Wähle Länge, Fläche oder Volumen. Vergleiche die Richtungen und den Faktor.",
+          percent: "Ändere den Prozentsatz. Verändere dann die Grundmenge.",
+          equation: "Ändere x. Finde die Stellung, in der die Waage gerade steht.",
+          geometry: "Ziehe den Regler. Bei 90° steht der blaue Schenkel senkrecht.",
+          area: "Ändere die Seitenlängen. Blau: Fläche. Grün: Außenrand.",
+          chance: "Tippe auf »Würfel 10-mal werfen«. Vergleiche die Säulen.",
+          "word-problem": "Ändere die Kartenanzahl. Die Fahrt wird nur einmal bezahlt.",
+          check: "Rechne zuerst die Multiplikation. Wähle dann dein Ergebnis."
+        };
+        document.querySelectorAll(".discovery").forEach(lab => {
+          lab.querySelector(".discovery-intro").textContent = briefs[lab.dataset.lab];
+          lab.setAttribute("aria-label", lab.querySelector("h3").textContent);
+        });
+        const controlNames = {
+          "round-number": "Deine Zahl", "factor-a": "Erster Faktor", "factor-b": "Zweiter Faktor",
+          "fraction-numerator": "Blaue Stücke (Zähler)", "fraction-denominator": "Alle Stücke (Nenner)",
+          "decimal-tenths": "Gefärbte Zehntel", "negative-start": "Startzahl",
+          "negative-move": "Schritte: + rechts, − links", "unit-amount": "Anzahl der Einheiten",
+          "percent-rate": "Prozentsatz", "percent-base": "Grundmenge",
+          "equation-x": "Wert von x", "angle-size": "Winkelgröße",
+          "rectangle-length": "Länge", "rectangle-width": "Breite",
+          "story-quantity": "Anzahl der Karten", "story-price": "Preis je Karte",
+          "story-extra": "Fahrtkosten (einmal)"
+        };
+        document.querySelectorAll('.discovery input[type="range"]').forEach(field => {
+          const label = field.closest("label");
+          const value = label.querySelector("output");
+          const title = document.createElement("span");
+          title.textContent = controlNames[field.dataset.control];
+          label.replaceChildren(title, value, field);
+        });
+        const chance = document.querySelector('[data-lab="chance"]');
+        const chartNote = document.createElement("p");
+        chartNote.className = "diagram-note";
+        chartNote.textContent = "Unten: Augenzahl 1 bis 6. Oben: Wie oft die Zahl gewürfelt wurde. Säulenhöhe = Häufigkeit; alle Säulen verwenden dieselbe Skala.";
+        chance.querySelector(".discovery-bars").before(chartNote);
       }
     })();
   </script>
