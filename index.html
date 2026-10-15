@@ -65,6 +65,16 @@
     .unit-learning svg { display: block; width: 100%; max-width: 680px; height: auto; margin: .7rem auto; }
     .unit-learning h4 { font-size: 1.2rem; margin: .5rem 0; }
     [data-model="units"].model-tiles { display: block; }
+    .experiment-task { padding: .8rem; border-left: 4px solid #25834f; background: #eaf6ef; border-radius: 8px; }
+    .experiment-task strong { display: block; }
+    .experiment-task ol { margin: .4rem 0; padding-left: 1.3rem; }
+    .experiment-expression { font-size: clamp(1.35rem, 4vw, 1.8rem); font-weight: 750; padding: .6rem; background: #eaf2fc; border-radius: 8px; }
+    .experiment-comparison { margin: .8rem 0; padding: .6rem; border: 1px solid #a9c9e5; border-radius: 8px; }
+    .comparison-images { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: .8rem; }
+    .comparison-images figure { margin: 0; min-width: 0; }
+    .comparison-images svg { display: block; width: 100%; height: auto; }
+    .discovery-controls > label { min-width: 0; gap: .4rem; }
+    .discovery-controls output { overflow-wrap: anywhere; }
     @media print { .coach-controls, .coach-buttons { display: none; } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
     html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
@@ -584,7 +594,7 @@
       <div class="discovery" data-lab="decimal">
         <h3>Entdeckerstation: Was bedeutet die Ziffer hinter dem Komma?</h3>
         <p class="discovery-intro">Ziehe den Regler. Sieh, wie die Zahl aus Einern und Zehnteln zusammengesetzt ist und wie der gleiche Wert als Bruch aussieht.</p>
-        <div class="discovery-controls"><label for="decimal-tenths">Zehntel: <output data-out="decimal-tenths">4</output><input id="decimal-tenths" data-control="decimal-tenths" type="range" min="0" max="9" value="4"></label></div>
+        <div class="discovery-controls"><label for="decimal-tenths">Zehntel: <output data-out="decimal-tenths">4</output><input id="decimal-tenths" data-control="decimal-tenths" type="range" min="0" max="10" value="4"></label></div>
         <div class="discovery-bar" aria-label="Zehntel-Balken"><span data-visual="decimal-bar"></span></div>
         <p class="discovery-result" data-out="decimal-result" aria-live="polite"></p>
         <p class="discovery-feedback">Aha-Frage: Warum ist 0,4 dasselbe wie 4/10 – und warum ist das weniger als 1?</p>
@@ -920,14 +930,20 @@
       </details>
       <div class="discovery" data-lab="check">
         <h3>Letzter Aha-Check: Was rechnest du zuerst?</h3>
-        <p class="discovery-intro">Wähle dein Ergebnis für 4 + 3 · 2. Danach siehst du, warum die Rechenreihenfolge wichtig ist.</p>
+        <p class="discovery-intro">Berechne die Rechnung im blauen Feld. Erst die Malaufgabe, danach Plus. Ändere anschließend nur eine Zahl und probiere es erneut.</p>
+        <p class="experiment-expression" data-out="check-expression" aria-live="polite">4 + 3 · 2 = ?</p>
         <div class="discovery-controls">
-          <label><input type="radio" name="check-answer" value="14"> 14</label>
-          <label><input type="radio" name="check-answer" value="10"> 10</label>
-          <button type="button" data-action="check-order">Antwort prüfen</button>
+          <label for="check-a">Zahl vor dem Plus <output data-out="check-a">4</output><input id="check-a" data-control="check-a" type="range" min="1" max="12" value="4"></label>
+          <label for="check-b">Anzahl der Gruppen <output data-out="check-b">3</output><input id="check-b" data-control="check-b" type="range" min="1" max="8" value="3"></label>
+          <label for="check-c">Plättchen je Gruppe <output data-out="check-c">2</output><input id="check-c" data-control="check-c" type="range" min="1" max="8" value="2"></label>
         </div>
+        <form class="check-order-form">
+          <label for="order-answer">Dein Ergebnis</label>
+          <input id="order-answer" name="check-answer" type="text" inputmode="decimal" autocomplete="off">
+          <button type="submit">Antwort prüfen</button>
+        </form>
         <p class="discovery-result" data-out="check-result" aria-live="polite">Denk nach: Ist Addition oder Multiplikation zuerst dran?</p>
-        <p class="discovery-feedback">Aha-Frage: Wieso würde eine andere Reihenfolge ein anderes Ergebnis liefern?</p>
+        <p class="discovery-feedback">Aha-Frage: Was ändert eine Klammer um die ersten beiden Zahlen? Vergleiche dazu die Bilder unter „Verstehen“.</p>
       </div>
     </section>
 
@@ -1091,6 +1107,7 @@
 
       function isTaskCorrect(input, item) {
         if (item.answerType === "text") return input.trim().toLocaleLowerCase("de-DE").replace(/\s+/g, "") === item.answer.toLocaleLowerCase("de-DE").replace(/\s+/g, "");
+        if (item.requireFraction && !/^[+-]?\d+\s*\/\s*[+-]?\d+$/.test(input.trim())) return false;
         if (item.interval) {
           const value = rational(input);
           const lower = rational(String(item.interval[0]));
@@ -1335,6 +1352,7 @@
             const rules = [
               [2, Math.abs(value) % 2 === 0, `letzte Ziffer ${String(Math.abs(value)).at(-1)} ist gerade`],
               [3, sum % 3 === 0, `Quersumme ${sum} ist durch 3 teilbar`],
+              [9, sum % 9 === 0, `Quersumme ${sum} ist durch 9 teilbar`],
               [5, Math.abs(value) % 5 === 0, `letzte Ziffer ist 0 oder 5`],
               [10, Math.abs(value) % 10 === 0, `letzte Ziffer ist 0`]
             ];
@@ -1345,7 +1363,7 @@
               card.textContent = `Durch ${divisor}: ${passes ? "Ja ✓" : "Nein ✗"}. ${passes ? "Regel erfüllt: " : "Regel nicht erfüllt: "}${reason}.`;
               return card;
             }));
-            output(lab, "div-result", `${value}: Quersumme ${sum}. Teilbar durch ${applicable.length ? applicable.join(", ") : "keine der Zahlen 2, 3, 5 oder 10"}.`);
+            output(lab, "div-result", `${value}: Quersumme ${sum}. Teilbar durch ${applicable.length ? applicable.join(", ") : "keine der Zahlen 2, 3, 5, 9 oder 10"}.`);
             break;
           }
           case "fraction": {
@@ -1368,7 +1386,9 @@
             const tenths = number(lab, "decimal-tenths");
             output(lab, "decimal-tenths", String(tenths));
             lab.querySelector('[data-visual="decimal-bar"]').style.width = `${tenths * 10}%`;
-            output(lab, "decimal-result", `0,${tenths} = ${tenths}/10. Der Balken zeigt ${tenths} von 10 Zehnteln; zusammen sind 10 Zehntel genau ein Ganzes.`);
+            output(lab, "decimal-result", `${numberFormat.format(tenths / 10)} = ${tenths}/10. Der Balken zeigt ${tenths} von 10 Zehnteln; zusammen sind 10 Zehntel genau ein Ganzes.`);
+            lab.querySelector(".discovery-bar").setAttribute("role", "img");
+            lab.querySelector(".discovery-bar").setAttribute("aria-label", `${tenths} von 10 Teilen gefärbt: ${numberFormat.format(tenths / 10)}.`);
             break;
           }
           case "negative": {
@@ -1486,6 +1506,20 @@
             output(lab, "story-result", `${quantity} · ${price} € = ${quantity * price} € für die Karten; ${quantity * price} € + ${extra} € Fahrtkosten = ${quantity * price + extra} € insgesamt.`);
             break;
           }
+          case "check": {
+            const a = number(lab, "check-a"), b = number(lab, "check-b"), c = number(lab, "check-c");
+            for (const [key, value] of [["check-a", a], ["check-b", b], ["check-c", c]]) output(lab, key, String(value));
+            output(lab, "check-expression", `${a} + ${b} · ${c} = ?`);
+            const model = orderLearningModel(a, b, c, false);
+            modelBox(lab, "order").replaceChildren(visualFigure(model.svg, model.caption, model.height));
+            const answer = lab.querySelector('[name="check-answer"]');
+            answer.value = "";
+            answer.removeAttribute("aria-invalid");
+            const result = lab.querySelector('[data-out="check-result"]');
+            result.style.removeProperty("background-color");
+            result.textContent = "Zähle erst die Plättchen in den Gruppen. Füge danach die einzelnen Plättchen links hinzu.";
+            break;
+          }
         }
       }
 
@@ -1540,15 +1574,26 @@
           lab.querySelector('[data-out="chance-result"]').textContent = "Noch keine Würfe. Bei einem fairen Würfel sind alle sechs Zahlen gleich wahrscheinlich.";
           updateDiscovery(lab);
         });
-        lab.querySelector('[data-action="check-order"]')?.addEventListener("click", () => {
-          const answer = lab.querySelector('input[name="check-answer"]:checked');
+        lab.querySelector(".check-order-form")?.addEventListener("submit", event => {
+          event.preventDefault();
+          const answer = lab.querySelector('[name="check-answer"]');
+          const a = number(lab, "check-a"), b = number(lab, "check-b"), c = number(lab, "check-c");
           const result = lab.querySelector('[data-out="check-result"]');
-          result.textContent = answer?.value === "10"
-            ? "Genau! Erst 3 · 2 = 6, dann 4 + 6 = 10. Multiplikation kommt vor Addition."
-            : answer
-              ? "Noch nicht ganz. Rechne zuerst 3 · 2 und addiere danach 4."
-              : "Wähle erst eine Antwort aus. Tipp: Multiplikation kommt vor Addition.";
-          result.style.backgroundColor = answer?.value === "10" ? "#d7f0e0" : "#fff0ef";
+          const correct = isCorrect(answer.value, String(a + b * c));
+          answer.setAttribute("aria-invalid", String(!correct));
+          result.replaceChildren();
+          if (correct) {
+            result.textContent = `Richtig! Erst ${b} · ${c} = ${b * c}, dann ${a} + ${b * c} = ${a + b * c}. Ändere jetzt eine Zahl: Welche Veränderung erwartest du?`;
+          } else {
+            const heading = document.createElement("strong");
+            heading.textContent = answer.value.trim() ? "Noch nicht richtig. Probiere es mit diesen drei Schritten:" : "Tippe ein Ergebnis ein. Diese drei Schritte helfen:";
+            const list = document.createElement("ol");
+            for (const tip of [`Zähle ${b} Gruppen mit je ${c} Plättchen.`, "Rechne diese Multiplikation zuerst.", `Addiere anschließend die ${a} einzelnen Plättchen.`]) {
+              const item = document.createElement("li"); item.textContent = tip; list.append(item);
+            }
+            result.append(heading, list);
+          }
+          result.style.backgroundColor = correct ? "#d7f0e0" : "#fff0ef";
         });
         updateDiscovery(lab);
       });
@@ -1569,9 +1614,8 @@
           questionText.after(picture);
         }
         picture.replaceChildren();
-        const fractions = item.question.match(/\d+\/\d+/g) || [];
-        for (const fraction of fractions) {
-          const [numerator, denominator] = fraction.split("/").map(Number);
+        for (const [numerator, denominator] of taskFractions(item)) {
+          const fraction = `${numerator}/${denominator}`;
           if (denominator < 1 || denominator > 100 || numerator > 3 * denominator) continue;
           const rows = Math.max(1, Math.ceil(numerator / denominator));
           const diagram = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -1650,7 +1694,7 @@
           ? "Tippe das gefragte Wort oder die gefragten Zeichen ohne Zusatz ein."
           : item.requireReducedFraction
           ? "Tippe einen vollständig gekürzten Bruch mit / ein, zum Beispiel 3/4."
-          : item.answer.includes("/")
+          : item.requireFraction || item.answer.includes("/")
           ? "Tippe den Bruch mit / ein, zum Beispiel 3/4. Gleichwertige Brüche zählen auch."
           : item.question.includes("1 für Ja")
             ? "Tippe 1 für Ja oder 0 für Nein."
@@ -1663,14 +1707,14 @@
             ["Stellenwert: Warum ist eine 2 nicht immer zwei?", "place", "Eine Ziffer hat je nach Platz einen anderen Wert. In 324 bedeutet die 3 drei Hunderter, die 2 zwei Zehner und die 4 vier Einer. Die 0 hält einen Platz frei.", "Zehn Einer lassen sich zu einem Zehner bündeln; zehn Zehner zu einem Hunderter. Deshalb ist jede Stelle links zehnmal so viel wert.", "Stelle die Zehner auf 0. Warum darf die 0 in der Zahl nicht fehlen?"],
             ["Große Zahlen und römische Zahlen", "roman", "Unser Zahlensystem benutzt Stellenwerte. Bei römischen Zahlen stehen I für 1, V für 5 und X für 10. Größere Zahlen entstehen durch Zusammenstellen dieser Zeichen.", "Normalerweise addierst du. Steht I vor V oder X, wird die 1 abgezogen: IV = 4 und IX = 9. Römische Ziffern haben keinen Stellenwert wie unsere Ziffern.", "Vergleiche 14 und 41 in unserem System. Schau dann auf XIV und XLI: Warum braucht das römische System andere Zeichen?"],
             ["Runden: Welche Angabe ist sinnvoll?", "round", "Runden bedeutet: Eine Zahl durch einen nahen, einfacheren Wert ersetzen. Bei Entfernungen reicht manchmal ein ungefährer Wert; bei einer Rechnung an der Kasse nicht.", "Beim Runden auf Hunderter suchst du die beiden benachbarten Hunderter. Der nähere wird gewählt; genau in der Mitte rundest du auf.", "Finde zwei verschiedene Zahlen, die zu 1 300 gerundet werden. Bedeutet die Angabe 1 300 also immer exakt dieselbe ursprüngliche Zahl?"],
-            ["Zwischen zwei Zahlen ist noch Platz", "density", "Auf der Zahlengeraden gibt es zwischen 0,4 und 0,5 noch viele Zahlen, etwa 0,45. Das gilt auch zwischen Bruchzahlen.", "Der Mittelwert zweier verschiedener Zahlen liegt genau dazwischen. Du kannst das mit einem neuen Zwischenwert immer wieder machen.", "Finde eine Zahl zwischen 0,4 und 0,45. Dann eine zwischen 0,4 und deiner neuen Zahl."]
+            ["Zwischen zwei Zahlen ist noch Platz", "density", "Auf der Zahlengeraden gibt es zwischen 0,4 und 0,5 noch viele Zahlen, etwa 0,45. Das gilt auch zwischen Bruchzahlen.", "Addiere die beiden Randzahlen und teile durch 2. Das Ergebnis liegt genau in der Mitte. Du kannst das mit einem neuen Zwischenwert immer wieder machen.", "Stelle die Grenzen auf 0,4 und 0,5. Lies die grüne Zahl ab. Berechne danach auf Papier eine Zahl zwischen 0,4 und dieser grünen Zahl."]
           ],
           grundrechenarten: [
             ["Addition und Subtraktion: Stellen passend ordnen", "addsub", "Beim Addieren kommen Dinge dazu, beim Subtrahieren gehen sie weg. Schreibe Einer unter Einer, Zehner unter Zehner. Bei Dezimalzahlen stehen die Kommas untereinander.", "10 Einer bilden einen Zehner. Ein Übertrag tauscht also keine Menge weg, sondern bündelt sie nur neu. Beim Abziehen kannst du umgekehrt einen Zehner in 10 Einer tauschen.", "Wähle 28 + 17. Bei welchem Stellenwert brauchst du einen Übertrag? Kontrolliere die Summe durch Subtrahieren."],
-            ["Multiplikation: Reihen zählen und zerlegen", "multiply", "4 · 6 bedeutet vier gleich große Gruppen mit je sechs Dingen. Du kannst das als vier Reihen mit je sechs Kästchen sehen.", "Zerlege 24 · 3 in 20 · 3 und 4 · 3. Du zählst dieselben Kästchen in zwei Teilflächen. Das ist das Verteilungsgesetz.", "Verdopple einen Faktor. Was passiert mit den Kästchen? Tausche anschließend die Faktoren: Ändert sich das Ergebnis?"],
+            ["Multiplikation: Reihen zählen und zerlegen", "multiply", "4 · 6 bedeutet vier gleich große Gruppen mit je sechs Dingen. Du kannst das als vier Reihen mit je sechs Kästchen sehen.", "Zerlege 24 · 3 in 20 · 3 und 4 · 3. Du zählst dieselben Kästchen in zwei Teilflächen. Das ist das Verteilungsgesetz.", "Vergleiche 3 Reihen mit je 4 Kästchen mit 6 Reihen zu je 4. Stelle danach 4 Reihen mit je 3 Kästchen ein: Welche Anordnung hat wieder gleich viele Kästchen wie am Anfang?"],
             ["Division: gleich verteilen und den Rest prüfen", "divide", "Bei 17 : 4 fragst du, wie viele Vierergruppen in 17 passen. Vier Gruppen brauchen 16; ein Ding bleibt übrig. Also: 4 Rest 1.", "Bei der schriftlichen Division arbeitest du Stelle für Stelle. Nach jedem Teilen folgen Multiplizieren und Abziehen. Der Rest muss kleiner als der Divisor sein.", "Suche eine Division mit Rest 0 und eine mit Rest 2. Prüfe immer: Divisor · Quotient + Rest = Dividend."],
             ["Potenzen und Quadratzahlen", "power", "3⁴ ist die Kurzschreibweise für 3 · 3 · 3 · 3. Die 3 heißt Basis; die 4 heißt Exponent und zählt die Faktoren.", "Eine Quadratzahl a² lässt sich als Quadrat mit a Reihen und a Spalten darstellen. Lerne die Quadratzahlen von 1² bis 15².", "Vergleiche 3⁴ und 3 · 4. Warum ist der Exponent kein gewöhnlicher Faktor?"],
-            ["Klammern und Punkt vor Strich", "order", "Eine Rechenaufgabe ist wie eine Anleitung. Klammern geben den ersten Schritt vor. Danach kommen Potenzen, dann Mal/Geteilt, dann Plus/Minus.", "Ohne diese Reihenfolge hätte dieselbe Aufgabe mehrere Ergebnisse. Auf derselben Rangstufe wird von links nach rechts gerechnet.", "Vergleiche 4 + 3 · 2 und (4 + 3) · 2. Ändere die Zahlen und erkläre, warum die Ergebnisse verschieden sind."]
+            ["Klammern und Punkt vor Strich", "order", "Eine Rechenaufgabe ist wie eine Anleitung. Klammern geben den ersten Schritt vor. Danach kommen Potenzen, dann Mal/Geteilt, dann Plus/Minus.", "Ohne diese Reihenfolge hätte dieselbe Aufgabe mehrere Ergebnisse. Auf derselben Rangstufe wird von links nach rechts gerechnet.", "Vergleiche 4 + 3 · 2 und (4 + 3) · 2. Ändere dann nur die letzte Zahl auf 1. Wann macht die Klammer einen Unterschied? Erkläre mit den Plättchen."]
           ],
           teilbarkeit: [
             ["Teilbarkeit und Quersumme", "divisibility", "Teilbar bedeutet: Bei der Division bleibt kein Rest. Für 2, 5 und 10 genügt die letzte Ziffer. Für 3 und 9 hilft die Quersumme – die Summe aller Ziffern.", "Prüfe: gerade Endziffer → durch 2; 0 oder 5 → durch 5; 0 → durch 10. Ist die Quersumme durch 3 oder 9 teilbar, gilt das auch für die ganze Zahl.", "Finde eine Zahl, die durch 3, aber nicht durch 9 teilbar ist."],
@@ -1679,11 +1723,11 @@
           ],
           brueche: [
             ["Brüche sind gleich große Teile – auch mehr als ein Ganzes", "fraction", "Der Nenner sagt, in wie viele gleich große Stücke EIN Ganzes geteilt ist. Der Zähler zählt die genommenen Stücke. 7/4 sind sieben Viertel, also mehr als ein Ganzes.", "Der Bruchstrich bedeutet auch Division: 7/4 = 7 : 4. Vier Viertel ergeben ein Ganzes. Der Rest sind drei Viertel: 1 3/4.", "Stelle den Zähler größer als den Nenner. Wie viele ganze Kuchen kannst du zusammensetzen?"],
-            ["Brüche von Mengen und Rechnen mit natürlichen Zahlen", "fraction-operator", "3/4 von 20 bedeutet: Teile die 20 Dinge in vier gleich große Gruppen und nimm drei davon. So benutzt du einen Bruch als Rechenanweisung.", "Ein Viertel von 20 ist 20 : 4 = 5. Drei Viertel sind 3 · 5 = 15. Beim Multiplizieren eines Bruchs mit einer natürlichen Zahl wird der Zähler multipliziert; beim Teilen wird der Nenner multipliziert: 3/4 : 2 = 3/8.", "Nimm erst eine Gruppe, dann drei Gruppen. Verdopple die Gesamtmenge: Was geschieht mit der ausgewählten Anzahl?"],
+            ["Brüche von Mengen und Rechnen mit natürlichen Zahlen", "fraction-operator", "3/4 von 20 bedeutet: Teile die 20 Dinge in vier gleich große Gruppen und nimm drei davon. So benutzt du einen Bruch als Rechenanweisung.", "Ein Viertel von 20 ist 20 : 4 = 5. Drei Viertel sind 3 · 5 = 15. Beim Multiplizieren eines Bruchs mit einer natürlichen Zahl wird der Zähler multipliziert; beim Teilen wird der Nenner multipliziert: 3/4 : 2 = 3/8.", "Stelle 3 Viertel und 3 Dinge pro Viertel ein. Verdopple nur die Dinge pro Viertel auf 6. Was geschieht mit der Gesamtmenge und dem ausgewählten Teil?"],
             ["Erweitern und Kürzen: gleicher Anteil, andere Stücke", "expand", "Beim Erweitern unterteilst du jedes Stück noch einmal. Deshalb musst du Zähler UND Nenner mit derselben Zahl multiplizieren. Beim Kürzen fasst du kleine Stücke zusammen.", "Der Anteil bleibt gleich: 1/2 = 2/4 = 3/6. Du veränderst die Anzahl und Größe der Stücke gemeinsam, nicht die ausgewählte Menge.", "Verdopple Zähler und Nenner. Prüfe im Bild: Bleibt die blaue Fläche gleich groß?"],
-            ["Brüche vergleichen und auf der Zahlengeraden finden", "compare", "Vergleiche immer Anteile desselben Ganzen. Bei gleichem Nenner sind die Stücke gleich groß. Dann entscheidet der Zähler. Bei verschiedenen Nennern helfen Bruchstreifen gleicher Länge.", "1/2 und 2/3 werden als 3/6 und 4/6 geschrieben. Vier Sechstel sind mehr als drei Sechstel. Je weiter rechts eine Zahl auf der Zahlengeraden liegt, desto größer ist sie.", "Finde zwei verschiedene Brüche, die gleich groß sind. Finde danach einen Bruch dazwischen."],
+            ["Brüche vergleichen und auf der Zahlengeraden finden", "compare", "Vergleiche immer Anteile desselben Ganzen. Bei gleichem Nenner sind die Stücke gleich groß. Dann entscheidet der Zähler. Bei verschiedenen Nennern helfen Bruchstreifen gleicher Länge.", "1/2 und 2/3 werden als 3/6 und 4/6 geschrieben. Vier Sechstel sind mehr als drei Sechstel. Je weiter rechts eine Zahl auf der Zahlengeraden liegt, desto größer ist sie.", "Stelle 3/6 und 4/8 ein. Warum sind beide gleich groß? Erhöhe danach nur den ersten Zähler auf 4."],
             ["Brüche addieren und subtrahieren", "fraction-sum", "Du kannst Drittel und Viertel nicht einfach zusammenzählen: Die Stücke sind verschieden groß. Mache daraus gleich große Stücke, zum Beispiel Zwölftel.", "Für 1/3 + 1/4 gilt: 1/3 = 4/12 und 1/4 = 3/12. Nun addierst du 4 + 3; die Stückgröße, also der Nenner, bleibt 12.", "Vergleiche 1/3 + 1/4 mit 2/7. Warum beschreibt 2/7 nicht dieselbe Menge?"],
-            ["Brüche multiplizieren: ein Teil von einem Teil", "fraction-product", "Die Hälfte von drei Vierteln heißt 1/2 · 3/4. Erst nimmst du drei Viertel, danach davon die Hälfte.", "Im Rechteck färbst du einen Anteil waagerecht und den anderen senkrecht. Die überlappende Fläche ist das Produkt. So entstehen Zähler mal Zähler und Nenner mal Nenner.", "Halbiere einen Anteil. Wird das Produkt größer oder kleiner? Multipliziere danach denselben Anteil mit 2."],
+            ["Brüche multiplizieren: ein Teil von einem Teil", "fraction-product", "Zwei Drittel von drei Vierteln heißt 2/3 · 3/4. Erst nimmst du drei Viertel, danach davon zwei Drittel.", "Im Rechteck färbst du einen Anteil waagerecht und den anderen senkrecht. Die überlappende Fläche ist das Ergebnis. So entstehen Zähler mal Zähler und Nenner mal Nenner.", "Lass 3/4 ausgewählt. Vergleiche davon 1/3, 2/3 und 3/3. Wann bekommst du wieder die ganzen 3/4?"],
             ["Brüche dividieren: Wie oft passt das Stück hinein?", "fraction-division", "1/2 : 1/4 fragt: Wie viele Viertel passen in eine Hälfte? Im Streifen sind es zwei. Deshalb ist das Ergebnis 2.", "Allgemein ersetzt du Teilen durch einen Bruch durch Malnehmen mit seinem Kehrwert. Bei 2/3 : 1/6 wird daraus 2/3 · 6 = 4.", "Teile ein Halb durch ein Achtel. Zähle zuerst im Streifen und rechne dann mit dem Kehrwert."]
           ],
           dezimalzahlen: [
@@ -1704,7 +1748,7 @@
             ["Bruch, Dezimalzahl und Prozent: drei Schreibweisen", "percent", "Prozent bedeutet von hundert. 25 % sind 25/100 = 1/4 = 0,25. Alle drei Schreibweisen beschreiben denselben Anteil.", "Um den Anteil einer Menge zu finden, multiplizierst du die Menge mit dem Anteil: ein Viertel von 80 = 80 : 4 = 20. Achte darauf, was das Ganze ist.", "Behalte 25 % und verdopple das Ganze. Was passiert mit dem Prozentwert?"],
             ["Proportional rechnen und Dreisatz", "proportion", "Wenn jedes Heft gleich viel kostet, wächst der Preis im gleichen Verhältnis wie die Anzahl. Doppelt so viele Hefte kosten doppelt so viel.", "Im Dreisatz rechnest du zuerst auf ein Stück zurück und dann auf die gesuchte Stückzahl: 3 Hefte → 6 €; 1 Heft → 2 €; 5 Hefte → 10 €. Eine feste Zusatzgebühr würde diesen Zusammenhang verändern.", "Ändere die gesuchte Anzahl. Prüfe, ob Preis : Anzahl stets denselben Stückpreis ergibt."],
             ["Maßstab: vom Bild zur Wirklichkeit", "scale", "Maßstab 1 : 100 bedeutet: 1 cm im Bild steht für 100 cm in der Wirklichkeit. Die Einheiten müssen zusammenpassen.", "Originallänge = Bildlänge · Maßstabszahl. Bildlänge = Originallänge : Maßstabszahl. Eine 4 cm lange Strecke bei 1 : 100 ist 400 cm = 4 m lang.", "Halbiere die Bildlänge. Was passiert mit der Originallänge? Zeichne anschließend ein 4 m langes Zimmer bei 1 : 100.", "Zeichne einen Grundriss auf Papier. Miss Länge und Breite eines Raums und wandle beide im gleichen Maßstab um."],
-            ["Zahlenmuster, Tabellen und Graphen", "pattern", "Ein Muster hat eine Regel, etwa jedes Mal +3. Eine Zuordnung ordnet einer Eingabe einen Ausgabewert zu. In einer Tabelle stehen passende Werte nebeneinander.", "Im Koordinatensystem wird jedes Wertepaar zum Punkt (x | y). Lies zuerst x waagerecht und dann y senkrecht. So kannst du dieselbe Regel als Satz, Tabelle und Bild zeigen.", "Ändere die Schrittweite. Wie ändert sich die Steigung der Punktfolge?"]
+            ["Zahlenmuster, Tabellen und Graphen", "pattern", "Ein Muster hat eine Regel, etwa jedes Mal +3. In der Tabelle steht oben die Schrittnummer und darunter die zugehörige Zahl.", "Im Koordinatensystem wird jedes Wertepaar zum Punkt (x | y). Lies zuerst x waagerecht und dann y senkrecht. So kannst du dieselbe Regel als Satz, Tabelle und Bild zeigen.", "Vergleiche die Schrittweiten 2 und 4. Wie hoch liegt jeweils der Punkt über x = 3? Welches Bild steigt stärker an?"]
           ],
           terme: [
             ["Aus einer Geschichte einen Zahlterm machen", "story", "Ein Zahlterm ist eine Rechnung ohne Gleichheitszeichen. Für drei Karten zu je 8 € und 4 € gemeinsame Fahrtkosten lautet er 3 · 8 + 4.", "Der Term muss zur Geschichte passen: Die Kartenkosten werden dreimal bezahlt, die Fahrtkosten nur einmal. 3 · (8 + 4) würde drei Fahrten berechnen.", "Ändere die Anzahl der Karten. Welche Zahl im Term verändert sich – und welche bleibt gleich?"],
@@ -1721,7 +1765,7 @@
           "flaechen-volumen": [
             ["Umfang und Fläche nicht verwechseln", "rectangle", "Der Umfang ist die Länge einmal um den Rand herum. Der Flächeninhalt zählt, wie viele Einheitsquadrate die Figur innen bedecken. Beides sind verschiedene Größen.", "Beim Rechteck liegen oben und unten die Länge l, links und rechts die Breite b: U = 2l + 2b. Innen liegen l · b Quadrate: A = l · b.", "Suche zwei Rechtecke mit demselben Umfang, aber unterschiedlichem Flächeninhalt."],
             ["Zusammengesetzte Flächen zerlegen", "compound", "Eine kompliziertere Figur kannst du in Rechtecke zerlegen. Oder du denkst dir ein großes Rechteck und ziehst ein fehlendes Stück ab.", "Bei einer L-Form gilt: ganze Rechteckfläche minus ausgeschnittene Rechteckfläche. Die Flächeneinheiten bleiben quadratisch, zum Beispiel cm².", "Vergrößere die Aussparung. Was geschieht mit der Fläche – und was mit dem Umfang?"],
-            ["Quader: Schichten zählen und Oberfläche erklären", "cube", "Das Volumen zählt Einheitswürfel im Inneren. Die Oberfläche zählt die Einheitsquadrate auf allen Außenflächen. Oberfläche und Volumen sind also nicht dasselbe.", "Eine Schicht enthält l · b Würfel. Bei h Schichten sind es l · b · h. Die sechs Außenflächen ergeben O = 2(lb + lh + bh). Beim Würfel: O = 6a² und V = a³.", "Verdopple nur die Höhe. Was passiert mit Volumen und Oberfläche? Vergleiche danach einen Würfel mit doppelter Kantenlänge.", "Baue aus Würfeln einen Quader. Zähle zuerst eine Schicht, dann die Schichten. Zeichne oder beklebe alle Außenflächen."]
+            ["Quader: Schichten zählen und Oberfläche erklären", "cube", "Das Volumen zählt kleine Würfel im Inneren. Die Oberfläche zählt kleine Quadrate auf allen Außenflächen. Oberfläche und Volumen sind also nicht dasselbe.", "l bedeutet Länge, b Breite und h Höhe. Eine Schicht enthält l · b Würfel. Bei h Schichten sind es l · b · h. Außen gibt es drei Paare gleich großer Rechtecke: O = 2 · (l · b + l · h + b · h).", "Stelle Länge 4, Breite 3 und Höhe 2 ein. Verdopple nur die Höhe auf 4. Vergleiche die Zahl der Würfel innen mit der Zahl der Quadrate außen.", "Baue aus Würfeln einen Quader. Zähle zuerst eine Schicht, dann die Schichten. Zeichne oder beklebe alle Außenflächen."]
           ],
           daten: [
             ["Von der Umfrage zur Häufigkeitstabelle", "data", "Bei einer Umfrage notierst du Antworten zuerst als Urliste. Eine Strichliste und Häufigkeitstabelle machen sichtbar, wie oft jede Antwort vorkommt.", "Absolute Häufigkeit = Anzahl. Relative Häufigkeit = Anzahl : Gesamtzahl. Eine gute Stichprobe passt zur Frage; nur deine Freunde zu fragen kann das Ergebnis verzerren.", "Ändere eine Häufigkeit. Verändert sich dann auch der Prozentanteil einer anderen Antwort?", "Frage mindestens zehn Mitschüler nach dem Schulweg. Lege vorher Antwortmöglichkeiten fest. Erstelle Urliste, Strichliste und Tabelle; erkläre, wen du befragt hast."],
@@ -1730,6 +1774,9 @@
           ],
           strategien: [
             ["Sachaufgaben planen, lösen und prüfen", "story", "Lies zuerst die Frage: Was ist gesucht? Schreibe bekannte Werte mit Einheiten auf. Eine Skizze oder Tabelle zeigt, welche Werte zusammengehören.", "Wähle die Rechnung erst nach dem Verstehen. Überschlage vor dem Rechnen, rechne dann genau und kontrolliere durch eine Umkehroperation. Ein Antwortsatz sagt, was das Ergebnis bedeutet.", "Vergleiche zwei mögliche Rechnungen: Kartenanzahl · Kartenpreis + Fahrtkosten oder Kartenanzahl · (Kartenpreis + Fahrtkosten). Welche passt zur Geschichte?", "Erfinde eine eigene Geschichte zur Rechnung 4 · 6 + 3. Tausche sie mit einem Mitschüler und lasse dir den Rechenweg erklären."]
+          ],
+          check: [
+            ["So prüfst du Punkt vor Strich", "order", "Bei 4 + 3 · 2 liegen vier einzelne Plättchen neben drei Gruppen mit je zwei Plättchen. Zähle zuerst die Gruppen: 3 · 2 = 6. Dann kommen die vier einzelnen dazu: 4 + 6 = 10.", "Eine Klammer verändert die Gruppen: (4 + 3) · 2 bedeutet zwei Gruppen mit je sieben Plättchen. Deshalb kommt hier 14 heraus. Ohne Klammer rechnest du Mal und Geteilt vor Plus und Minus.", "Stelle zuerst 4, 3 und 2 ein. Vergleiche die beiden Bilder. Ändere dann nur die letzte Zahl von 2 auf 3: Was wird jeweils vervielfacht?"]
           ]
         };
         for (const [id, units] of Object.entries(lessons)) {
@@ -1925,6 +1972,7 @@
         romanTask.answerType = "text"; romanTask.kind = "roman"; romanTask.values = [19]; tasks.push(romanTask);
         tasks.forEach(item => {
           item.requireReducedFraction = /kürz|gekürzt/i.test(item.question) && !/nur den Nenner/i.test(item.question);
+          item.requireFraction = item.requireReducedFraction || /schreibe (?:einen )?bruch/i.test(item.question);
         });
         tasks.sort((first, second) => ["Leicht", "Mittel", "Knifflig"].indexOf(first.level) - ["Leicht", "Mittel", "Knifflig"].indexOf(second.level));
       }
@@ -1951,7 +1999,7 @@
           "fraction-product": [["Anteil in Vierteln", 1, 4, 3], ["Davon wie viele Drittel?", 1, 3, 2]],
           "fraction-division": [["Achtel im großen Streifen", 1, 8, 4], ["Achtel je kleinem Stück", 1, 4, 2]],
           decimal: [["Hundertstel", 0, 100, 70]],
-          "decimal-operation": [["Erste Zahl in Zehnteln", 1, 30, 12], ["Zweite Zahl in Zehnteln", 1, 9, 3], ["Rechenart", ["Mal", "Geteilt"], 0]],
+          "decimal-operation": [["Erste Zahl", 1, 50, 12], ["Zweite Zahl", 1, 9, 3], ["Rechenart", ["Mal", "Geteilt"], 0]],
           periodic: [["Divisor", ["3", "4", "6", "8"], 0]],
           negative: [["Starttemperatur", -8, 8, -5], ["Änderung", -8, 8, 3]],
           distance: [["Erster Punkt", -8, 8, -3], ["Zweiter Punkt", -8, 8, 4]],
@@ -1982,7 +2030,17 @@
         box.className = "mini-lab";
         box.dataset.experiment = kind;
         const lead = document.createElement("p");
-        lead.textContent = "Probiere selbst: Verändere einen Wert. Beobachte zuerst das Bild, dann die Rechenschritte.";
+        lead.textContent = "Erst vermuten, dann ausprobieren: Ändere immer nur eine Zahl. Was passiert im Bild? Was bleibt gleich?";
+        const mission = experimentMission(kind);
+        const task = document.createElement("div");
+        task.className = "experiment-task";
+        const taskTitle = document.createElement("strong");
+        taskTitle.textContent = "Deine Entdeckeraufgabe";
+        const taskList = document.createElement("ol");
+        mission.forEach(text => {
+          const item = document.createElement("li"); item.textContent = text; taskList.append(item);
+        });
+        task.append(taskTitle, taskList);
         const controls = document.createElement("div");
         controls.className = "mini-controls";
         const fields = settings[kind].map(([name, min, max, initial], index) => {
@@ -2019,12 +2077,25 @@
         const coach = createVisualCoach("Eine Idee – mehrere Bilder");
         const aha = document.createElement("p");
         aha.className = "mini-challenge";
-        aha.textContent = `Dein Forscherauftrag: ${challenge}`;
-        box.append(lead, controls, coach.element, aha);
+        aha.textContent = `Weiterdenken: ${challenge}`;
+        const comparison = createExperimentComparison();
+        const reset = document.createElement("button");
+        reset.type = "button";
+        reset.textContent = "Zahlen zurücksetzen";
+        const startingValues = fields.map(({field}) => field.value);
+        reset.addEventListener("click", () => {
+          fields.forEach(({field}, index) => { field.value = startingValues[index]; });
+          comparison.clear();
+          render();
+        });
+        box.append(task, lead, controls, reset, coach.element, comparison.element, aha);
         render();
         function render() {
-          const values = fields.map(({ field, value }) => {
-            value.textContent = field.tagName === "SELECT" ? field.selectedOptions[0].textContent : field.value;
+          const values = fields.map(({ field, value }, index) => {
+            value.textContent = field.tagName === "SELECT" ? field.selectedOptions[0].textContent
+              : kind === "decimal-operation" && index < 2 ? `${Number(field.value) / 10}`.replace(".", ",")
+              : field.value;
+            field.setAttribute("aria-valuetext", value.textContent);
             return Number(field.value);
           });
           if (kind === "units") {
@@ -2033,12 +2104,93 @@
             fields[2].value.textContent = ["Ein großes Stück", "Eine Reihe zählen", "Alle kleinen Stücke zählen", "Mehrere große Stücke"][values[2]];
           }
           const model = experimentModel(kind, values);
+          comparison.update(model, fields.map(({field, value}) => `${field.closest("label").querySelector("span").textContent}: ${value.textContent}`));
           coach.update([
-            { name: "Entdeckerbild", draw: () => kind === "units" ? unitLearningFigure(model) : visualFigure(model.svg, model.caption) },
+            { name: "Entdeckerbild", draw: () => kind === "units" ? unitLearningFigure(model) : visualFigure(model.svg, model.caption, model.height || 250) },
             ...lessonVisualModels(kind, values)
           ], model.steps);
         }
         return box;
+      }
+
+      function experimentMission(kind) {
+        const actions = {
+          place: "Stelle 3 Hunderter, 2 Zehner und 4 Einer ein. Ändere nur die Zehner von 2 auf 0.",
+          roman: "Stelle erst 14, dann 19 ein. Welche römischen Zeichen ändern sich?",
+          round: "Stelle 1 249, 1 250 und 1 251 ein. Wann wechselt der gerundete Hunderter?",
+          density: "Stelle die Grenzen auf 4 und 5 Zehntel. Suche die grüne Zahl zwischen 0,4 und 0,5.",
+          addsub: "Stelle 28 + 17 ein. Erhöhe nur die zweite Zahl um 1. Sage das neue Ergebnis vorher.",
+          multiply: "Stelle 3 Reihen und 4 Spalten ein. Erhöhe nur die Reihen auf 6.",
+          divide: "Stelle 17 : 4 ein. Ändere nur die 17 auf 16. Was geschieht mit dem Rest?",
+          power: "Stelle die Basis auf 3. Vergleiche die Exponenten 2, 3 und 4. Zähle die gleichen Faktoren.",
+          order: "Stelle 4, 3 und 2 ein. Vergleiche 4 + 3 · 2 mit (4 + 3) · 2.",
+          divisibility: "Stelle 126 und danach 127 ein. Prüfe Endziffer und Quersumme, also die Summe der Ziffern.",
+          factors: "Vergleiche 24 und 30. Welche Primzahlen, also Zahlen mit genau zwei positiven Teilern, brauchst du jeweils?",
+          common: "Stelle 8 und 12 ein. Welche Teiler findest du in beiden Listen?",
+          fraction: "Stelle 3/4 ein. Behalte den Nenner 4 und erhöhe nur den Zähler bis 7.",
+          "fraction-operator": "Stelle 3 Viertel und 5 Dinge pro Viertel ein. Erhöhe nur die Dinge pro Viertel auf 6.",
+          expand: "Stelle 1/4 ein. Ändere nur den Erweiterungsfaktor von 1 auf 2, dann auf 3.",
+          compare: "Stelle 3/6 und 4/8 ein. Erhöhe dann nur den ersten Zähler auf 4.",
+          "fraction-sum": "Stelle 1/3 + 1/4 ein. Wechsle danach zu Minus. Achte auf gleich große Stücke.",
+          "fraction-product": "Wähle 3 Viertel und davon 1 Drittel. Erhöhe nur die Drittel auf 2.",
+          "fraction-division": "Stelle oben 4 Achtel und je Stück 1 Achtel ein. Ändere die Stückgröße auf 2 Achtel.",
+          decimal: "Stelle erst 70 Hundertstel, dann 7 Hundertstel ein. Vergleiche die gefärbten Kästchen.",
+          "decimal-operation": "Stelle 1,2 und 0,3 ein. Vergleiche Mal mit Geteilt. Welche Rechnung macht die Zahl kleiner?",
+          periodic: "Wähle zuerst die Division durch 4 und danach durch 3. Beobachte die Reste.",
+          negative: "Stelle −5 °C als Start und +3 °C als Änderung ein. Erhöhe nur die Änderung auf +6 °C.",
+          distance: "Stelle die Punkte auf −3 und +3. Verschiebe nur den zweiten Punkt auf +4.",
+          measure: "Stelle die Länge auf 6 cm. Verändere sie auf 8 cm und lies die Endmarkierung ab.",
+          units: "Beginne bei Strecke und Bildschritt 0. Gehe bis Bildschritt 3; ändere erst dann die Anzahl.",
+          time: "Stelle die Startminute auf 45 und die Dauer auf 35. Ändere nur die Startminute auf 50.",
+          percent: "Stelle 25 % von 40 ein. Verdopple nur das Ganze auf 80.",
+          proportion: "Lass jedes Heft 2 € kosten. Ändere nur die gesuchte Anzahl von 3 auf 6.",
+          scale: "Wähle 4 cm und Maßstab 1 : 100. Ändere nur die Bildlänge auf 2 cm.",
+          pattern: "Vergleiche die Schrittweiten 2 und 4. Lies bei beiden den Punkt über x = 3 ab.",
+          story: "Stelle 3 Karten zu 8 € und 4 € Fahrt ein. Ändere nur die Kartenanzahl auf 4.",
+          unknown: "Gesucht ist x + 5 = 12. Verändere x, bis deine eingesetzte Zahl die Aufgabe löst.",
+          angle: "Stelle 89°, 90° und 91° ein. Vergleiche die Öffnung mit einer rechteckigen Zimmerecke.",
+          parallel: "Verschiebe das untere Ende der blauen Verbindung. Stelle es schließlich genau unter den Punkt.",
+          circle: "Stelle den Radius, den Abstand von der Mitte zum Rand, von 2 cm auf 4 cm.",
+          symmetry: "Stelle den Punkt auf (3 | 2). Vergleiche die Spiegelung an der y-Achse mit der am Ursprung.",
+          body: "Wechsle zwischen Quader und Würfel. Welche Flächen werden zu Quadraten?",
+          "solid-types": "Vergleiche Zylinder und Kegel. Welcher Körper hat eine Spitze? Suche einen Alltagsgegenstand dazu.",
+          rectangle: "Vergleiche Länge 6, Breite 4 mit Länge 7, Breite 3. Zähle Rand und Kästchen getrennt.",
+          compound: "Stelle die Aussparung auf Breite 1 und Höhe 1. Erhöhe nur die Breite auf 3.",
+          cube: "Stelle Länge 4, Breite 3 und Höhe 2 ein. Verdopple nur die Höhe auf 4.",
+          data: "Stelle 4 zu Fuß, 3 mit dem Rad und 3 mit dem Bus ein. Erhöhe nur Rad auf 6.",
+          chart: "Wechsle zwischen Säulen, Balken, Kreis und Streifen. Suche immer dieselben 4 blauen Antworten.",
+          statistics: "Stelle die Werte 2, 4 und 9 ein. Erhöhe nur den letzten Wert auf 15."
+        };
+        if (!actions[kind]) throw new Error(`Entdeckerauftrag fehlt: ${kind}`);
+        return [actions[kind], "Merke dir das erste Bild mit „Vorher merken“. Ändere nur den genannten Wert und vergleiche.", "Erkläre mit deinen Worten: Was hat sich verändert, was ist gleich geblieben – und warum?"];
+      }
+
+      function createExperimentComparison() {
+        const element = document.createElement("details");
+        element.className = "experiment-comparison";
+        const title = document.createElement("summary");
+        title.textContent = "Vorher und nachher vergleichen";
+        const save = document.createElement("button");
+        save.type = "button"; save.textContent = "Vorher merken";
+        const status = document.createElement("p");
+        status.setAttribute("aria-live", "polite");
+        const images = document.createElement("div"); images.className = "comparison-images";
+        element.append(title, save, status, images);
+        let current, values, previous = null;
+        element.addEventListener("toggle", render);
+        save.addEventListener("click", () => { previous = {model: current, values: [...values]}; render(); });
+        function render() {
+          images.replaceChildren();
+          if (!previous) { status.textContent = "Merke dir ein Bild. Verändere dann oben nur einen Wert."; return; }
+          status.textContent = values.map((value, index) => `${previous.values[index]} → ${value}`).join(" · ");
+          for (const [name, model] of [["Vorher", previous.model], ["Nachher", current]]) {
+            const frame = document.createElement("figure");
+            const caption = document.createElement("figcaption"); caption.textContent = name;
+            frame.append(caption, visualFigure(model.svg, model.caption, model.height || 250)); images.append(frame);
+          }
+        }
+        return {element, update(model, labels) { current = model; values = labels; if (element.open || previous) render(); },
+          clear() { previous = null; render(); }};
       }
 
       function visualFigure(svg, caption, height = 250) {
@@ -2190,11 +2342,11 @@
                 const image = document.createElementNS("http://www.w3.org/2000/svg", "svg");
                 image.setAttribute("viewBox", "0 0 220 200");
                 image.setAttribute("role", "img");
-                image.setAttribute("aria-label", `${n}/${d}, Ganzes ${whole + 1}: ${shown ? taken : 0} von ${d} Stücken gefärbt.`);
+                image.setAttribute("aria-label", `${n}/${d}, Ganzes ${whole + 1}: ${taken} von ${d} Stücken gefärbt.`);
                 let svg = "";
                 for (let part = 0; part < d; part += 1) {
                   const start = part / d * 2 * Math.PI - Math.PI / 2, end = (part + 1) / d * 2 * Math.PI - Math.PI / 2;
-                  const selected = part < taken && shown > 0;
+                  const selected = part < taken;
                   const shape = d === 1 ? '<circle cx="110" cy="93" r="78" FILL/>'
                     : `<path d="M110 93L${110 + 78 * Math.cos(start)} ${93 + 78 * Math.sin(start)}A78 78 0 ${end - start > Math.PI ? 1 : 0} 1 ${110 + 78 * Math.cos(end)} ${93 + 78 * Math.sin(end)}Z" FILL/>`;
                   svg += shape.replace("FILL", `fill="${selected ? "#2873b9" : "#fff"}" stroke="#344b65" stroke-width="1.5"`);
@@ -2202,13 +2354,13 @@
                 }
                 image.innerHTML = svg;
                 const label = document.createElement("figcaption");
-                label.textContent = `${n}/${d} · Ganzes ${whole + 1}: ${shown ? taken : 0} von ${d} Stücken gefärbt`;
+                label.textContent = `${n}/${d} · Ganzes ${whole + 1}: ${taken} von ${d} Stücken gefärbt`;
                 frame.append(image, label); gallery.append(frame);
               }
             }
             const description = document.createElement("p");
             description.className = "coach-caption";
-            description.textContent = shown ? caption : "Noch ungefärbt. Schiebe die Hilfe auf Schritt 1: Der Zähler bestimmt, wie viele Stücke gefärbt werden.";
+            description.textContent = caption;
             content.append(gallery, description);
             return content;
           }
@@ -2219,14 +2371,14 @@
             for (let whole = 0; whole < count; whole += 1) {
               const taken = Math.min(d, Math.max(0, n - whole * d)), y = top + 40 + whole * 110;
               for (let part = 0; part < d; part += 1) {
-                const x = 30 + part * 480 / d, selected = part < taken && shown > 0;
+                const x = 30 + part * 480 / d, selected = part < taken;
                 svg += `<rect x="${x}" y="${y + 15}" width="${480 / d}" height="40" fill="${selected ? "#2873b9" : "#fff"}" stroke="#344b65"/>`;
                 if (selected) svg += `<path d="M${x + 480 / d * .2} ${y + 45}L${x + 480 / d * .8} ${y + 25}" stroke="#fff" stroke-width="2"/>`;
               }
               svg += `<text x="30" y="${y + 85}" font-size="18">Ganzes ${whole + 1}: ${taken} von ${d} Teilen</text>`;
             }
           });
-          return visualFigure(svg, shown ? caption : "Noch ungefärbt: In wie viele gleiche Teile ist ein Ganzes geteilt? Schiebe die Hilfe auf Schritt 1, um den Anteil zu färben.", height);
+          return visualFigure(svg, caption, height);
         } });
         const line = { name: "Zahlenstrahl", draw: shown => {
           const high = Math.max(1, ...values.map(([n, d]) => Math.ceil(n / d)));
@@ -2234,7 +2386,7 @@
           for (let i = 0; i <= high; i += 1) svg += `<path d="M${40 + i / high * 480} 102v16" stroke="#344b65"/><text x="${35 + i / high * 480}" y="145" font-size="20">${i}</text>`;
           values.forEach(([n, d], i) => {
             const x = 40 + n / d / high * 480, y = 85 - i * 27;
-            if (shown) svg += `<path d="M${x} ${y + 5}V110" stroke="#1456a0" stroke-dasharray="4 3"/><circle cx="${x}" cy="110" r="6" fill="#1456a0"/><text x="${Math.min(465, Math.max(30, x - 20))}" y="${y}" font-size="20">${n}/${d}</text>`;
+            svg += `<path d="M${x} ${y + 5}V110" stroke="#1456a0" stroke-dasharray="4 3"/><circle cx="${x}" cy="110" r="6" fill="#1456a0"/><text x="${Math.min(465, Math.max(30, x - 20))}" y="${y}" font-size="20">${n}/${d}</text>`;
           });
           return visualFigure(svg, "Ganze stehen in gleichen Abständen. Ein Bruch liegt nach Zähler-vielen Schritten der Größe 1/Nenner. Brüche mit gleichem Wert liegen am selben Ort.");
         } };
@@ -2285,6 +2437,18 @@
 
       function lessonVisualModels(kind, [a, b, c]) {
         switch (kind) {
+          case "order": return [{name: "Mit Klammer: andere Gruppen", draw: () => {
+            const width = 470 / c, rows = Math.ceil((a + b) / 4);
+            let svg = `<text x="25" y="28" font-size="23">(${a} + ${b}) · ${c}: ${c} gleiche Gruppen</text>`;
+            for (let group = 0; group < c; group += 1) {
+              const x = 30 + group * width;
+              svg += `<rect x="${x}" y="45" width="${width - 8}" height="${rows * 27 + 12}" rx="5" fill="#f1f5fa" stroke="#344b65"/>`;
+              for (let i = 0; i < a + b; i += 1) svg += `<circle cx="${x + 8 + (i % 4 + .5) * (width - 24) / 4}" cy="${64 + Math.floor(i / 4) * 27}" r="${Math.min(8, (width - 24) / 10)}" fill="${i < a ? "#b87913" : "#2873b9"}" stroke="#344b65"/>`;
+            }
+            const height = 110 + rows * 27;
+            svg += `<text x="25" y="${height - 18}" font-size="22">${c} · ${a + b} = ${(a + b) * c}</text>`;
+            return visualFigure(svg, `In JEDEM Rahmen liegen ${a} gelbe und ${b} blaue Plättchen. Die Klammer verbindet beide Mengen zu einer Gruppe. Diese ganze Gruppe wird ${c}-mal genommen.`, height);
+          } }];
           case "place": return [{ name: "Hunderterplatten, Zehnerstangen, Einer", draw: () => {
             let svg = "";
             for (let i = 0; i < a; i += 1) {
@@ -2304,19 +2468,41 @@
             const svg = Array.from({length:b}, (_, i) => `<rect x="${30 + i * 125}" y="65" width="85" height="65" rx="9" fill="#dcecfb" stroke="#344b65"/><text x="${60 + i * 125}" y="107" font-size="28">${a}</text>${i < b - 1 ? `<text x="${125 + i * 125}" y="107" font-size="28">·</text>` : ""}`).join("") + `<text x="30" y="185" font-size="22">Der Exponent ${b} zählt diese ${b} gleichen Faktoren.</text>`;
             return visualFigure(svg, "Jedes Kästchen steht für einen Faktor. Der Exponent sagt, wie viele dieser Kästchen miteinander multipliziert werden, nicht welche Zahl addiert wird.");
           } }];
-          case "fraction": case "expand": return fractionVisualModels([[a, b]]);
+          case "fraction": return fractionVisualModels([[a, b]]);
+          case "expand": return fractionVisualModels([[a, b], [a * c, b * c]]);
           case "compare": return fractionVisualModels([[a, 6], [b, 8]]);
           case "fraction-sum": return fractionVisualModels([[a, 3], [b, 4]]);
-          case "fraction-product": return fractionVisualModels([[a, 4], [b, 3]]);
-          case "fraction-division": return fractionVisualModels([[a, 8], [b, 8]]);
+          case "fraction-product": return fractionVisualModels([[a * b, 12]]);
+          case "fraction-division": return [{name: "Stücke im großen Anteil zählen", draw: () => {
+            let svg = "";
+            for (let i = 0; i < 8; i += 1) {
+              const color = i >= a ? "#f1f5fa" : Math.floor(i / b) % 2 ? "#25834f" : "#2873b9";
+              svg += `<rect x="${30 + i * 60}" y="65" width="60" height="60" fill="${color}" stroke="#344b65"/>`;
+            }
+            for (let i = 0; i < a; i += b) {
+              const complete = i + b <= a;
+              svg += `<path d="M${30 + i * 60} 140v10h${Math.min(b, a - i) * 60}v-10" fill="none" stroke="#17283f" stroke-width="3"${complete ? "" : ' stroke-dasharray="5 3"'}/>`;
+            }
+            svg += `<text x="30" y="35" font-size="24">${a}/8 : ${b}/8</text>`;
+            return visualFigure(svg, `Jedes Kästchen ist 1/8. Ein gesuchtes Stück umfasst ${b} Kästchen. Die Klammern unter dem gefärbten Anteil zeigen ganze Stücke; eine gestrichelte Klammer zeigt einen Rest. Ein Rest von z. B. einem halben gesuchten Stück zählt als 1/2, nicht als ein Ganzes.`);
+          } }];
           case "fraction-operator": return fractionVisualModels([[a, 4]]);
           case "decimal": case "percent": return fractionVisualModels([[a, 100]]);
           case "addsub": return arithmeticVisualModels(a, b, c === 0 ? "+" : "−");
           case "negative": return arithmeticVisualModels(a, b, "+");
           case "multiply": return arithmeticVisualModels(a, b, "·");
           case "divide": return arithmeticVisualModels(a, b, ":");
-          case "decimal-operation": return arithmeticVisualModels(a / 10, b / 10, c === 0 ? "·" : ":");
-          case "unknown": return arithmeticVisualModels(a, 5, "+");
+          case "decimal-operation": return c === 0 ? [{name: "Zehntel mal Zehntel", draw: () => {
+            const unit = Math.min(22, 470 / a, 165 / b);
+            let svg = "";
+            for (let row = 0; row < b; row += 1) for (let col = 0; col < a; col += 1) svg += `<rect x="${35 + col * unit}" y="${45 + row * unit}" width="${unit}" height="${unit}" fill="#c8e6d5" stroke="#344b65"/>`;
+            svg += `<text x="35" y="25" font-size="20">${a} Zehntel breit · ${b} Zehntel hoch</text><text x="35" y="235" font-size="21">${a * b} Kästchen · jedes ist 1/100 groß</text>`;
+            return visualFigure(svg, `Die Seiten jedes kleinen Kästchens sind je 1/10 lang. Deshalb hat jedes Kästchen 1/100 Fläche. ${a * b} solche Kästchen ergeben ${a * b}/100. Das Rechteck muss kein Quadrat sein.`);
+          } }, ...arithmeticVisualModels(a / 10, b / 10, "·")] : arithmeticVisualModels(a / 10, b / 10, ":");
+          case "unknown": return [{name: "Von 12 rückwärts denken", draw: () => visualFigure(
+            '<rect x="30" y="70" width="290" height="65" fill="#dcecfb" stroke="#344b65"/><rect x="320" y="70" width="190" height="65" fill="#e1f1e8" stroke="#344b65"/><text x="150" y="110" font-size="27">x = ?</text><text x="385" y="110" font-size="27">5</text><text x="100" y="40" font-size="24">Zusammen müssen es 12 sein.</text><text x="30" y="190" font-size="24">12 − 5 = ? · danach mit + 5 prüfen</text>',
+            "Der ganze Balken steht für 12. Ein Teil ist 5, der andere Teil ist gesucht. Die Balken sind eine Skizze; die Zahl x findest du durch Rückwärtsrechnen, nicht durch Abmessen."
+          ) }];
           case "angle": return [{ name: "Winkel mit Messskala", draw: () => {
             const x = angle => 280 + 175 * Math.cos(angle * Math.PI / 180);
             const y = angle => 210 - 175 * Math.sin(angle * Math.PI / 180);
@@ -2330,10 +2516,23 @@
             return visualFigure(svg, `Beginne rechts bei 0°. Lies gegen den Uhrzeigersinn bis zum beweglichen Schenkel: ${a}°. Der schwarze Punkt ist der Scheitel.`);
           } }];
           case "rectangle": return [{ name: "Rand und Innenfläche getrennt", draw: () => {
-            const svg = `<rect x="100" y="45" width="${a * 32}" height="${b * 18}" fill="#dcecfb" stroke="#25834f" stroke-width="6"/><text x="100" y="25" font-size="21">${a} Längeneinheiten</text><text x="15" y="85" font-size="20">${b}</text><text x="100" y="220" font-size="19">Innen: Fläche · Grüner Rand: Umfang</text>`;
+            const svg = `<rect x="100" y="45" width="${a * 20}" height="${b * 20}" fill="#dcecfb" stroke="#25834f" stroke-width="6"/><text x="100" y="25" font-size="21">${a} Längeneinheiten</text><text x="15" y="85" font-size="20">${b}</text><text x="100" y="235" font-size="19">Innen: Fläche · Grüner Rand: Umfang</text>`;
             return visualFigure(svg, "Fahre mit dem Finger einmal um den grünen Rand: Das ist der Umfang. Bedecke danach die blaue Innenfläche mit Einheitsquadraten: Das ist der Flächeninhalt.");
           } }];
-          case "cube": return [{ name: "Sechs Außenflächen als Netz", draw: () => {
+          case "cube": return [{name: "Eine Schicht nach der anderen", draw: () => {
+            const content = document.createElement("div");
+            const gallery = document.createElement("div"); gallery.className = "fraction-gallery";
+            for (let layer = 0; layer < c; layer += 1) {
+              let svg = "";
+              const unit = Math.min(38, 180 / Math.max(a, b));
+              for (let row = 0; row < b; row += 1) for (let col = 0; col < a; col += 1) svg += `<rect x="${20 + col * unit}" y="${20 + row * unit}" width="${unit}" height="${unit}" fill="#dcecfb" stroke="#344b65"/>`;
+              const frame = document.createElement("figure");
+              frame.append(visualFigure(svg, `Schicht ${layer + 1}: ${a} · ${b} = ${a * b} Würfel`, 220));
+              gallery.append(frame);
+            }
+            const note = document.createElement("p"); note.textContent = `${c} Schichten mit je ${a * b} Würfeln: ${a * b * c} Würfel innen. Jedes Kästchen ist die Oberseite eines kleinen Würfels.`;
+            content.append(gallery, note); return content;
+          } }, { name: "Sechs Außenflächen als Netz", draw: () => {
             const unit = Math.min(26, 470 / (2 * a + 2 * b), 170 / (c + 2 * b));
             const w = a * unit, d = b * unit, h = c * unit, x = 35, y = 35 + d;
             const face = (left, top, width, height, label, fill) => `<rect x="${left}" y="${top}" width="${width}" height="${height}" fill="${fill}" stroke="#344b65"/><text x="${left + width / 2}" y="${top + height / 2 + 5}" text-anchor="middle" font-size="${Math.min(17, width / 4, height / 2)}">${label}</text>`;
@@ -2357,14 +2556,22 @@
             } }];
           case "body": return [{ name: "Schrägbild statt Netz", draw: () => {
             const model = experimentModel("cube", a === 1 ? [3, 3, 3] : [4, 3, 3]);
-            return visualFigure(model.svg, "Derselbe Körpertyp als Schrägbild. Beim Netz liegen die Flächen nebeneinander; beim Körper schließen sie den Innenraum ein. Dieses Bild ist eine Skizze, kein Messbild.");
+            const holder = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            holder.innerHTML = model.svg;
+            holder.querySelectorAll("text").forEach(text => text.remove());
+            return visualFigure(holder.innerHTML, "Derselbe Körpertyp als Schrägbild. Beim Netz liegen die Flächen nebeneinander; beim Körper schließen sie den Innenraum ein. Dieses Bild ist eine Skizze, kein Messbild.");
           } }];
           default: return [];
         }
       }
 
+      function taskFractions(item) {
+        const given = item.question.startsWith("Fehler finden:") ? item.question.split("ist nicht")[0] : item.question;
+        return [...given.matchAll(/(\d+)\/(\d+)/g)].map(match => [Number(match[1]), Number(match[2])]);
+      }
+
       function taskVisualModels(item) {
-        const fractions = [...item.question.matchAll(/(\d+)\/(\d+)/g)].map(match => [Number(match[1]), Number(match[2])]);
+        const fractions = taskFractions(item);
         if (fractions.length) return fractionVisualModels(fractions.slice(0, 3));
         const operation = item.question.match(/^Berechne(?: schriftlich)?:?\s*([−-]?\d+(?:,\d+)?)\s*([+−·:])\s*(\d+(?:,\d+)?)\.$/);
         if (operation) return arithmeticVisualModels(Number(operation[1].replace("−", "-").replace(",", ".")), Number(operation[3].replace(",", ".")), operation[2], true);
@@ -2375,7 +2582,7 @@
         if (item.kind === "negative") return arithmeticVisualModels(item.values[0], item.values[1], "+", true);
         if (item.kind === "distance") return [{ name: "Entfernung auf dem Zahlenstrahl", draw: () => {
           const scene = experimentModel("distance", item.values);
-          return visualFigure(scene.svg, "Zähle zuerst den Weg bis null, danach von null bis zum anderen Punkt. Addiere beide positiven Teilstrecken.");
+          return visualFigure(scene.svg, "Zähle die Schritte zwischen den beiden Punkten. Liegen sie auf verschiedenen Seiten der Null, kannst du den Weg bei null teilen und beide Teilstrecken addieren. Auf derselben Seite ziehst du die kleinere Zahl von der größeren ab.");
         } }];
         if (item.interval) return [{ name: "Vergrößerter Zwischenraum", draw: () => {
           const [low, high] = item.interval;
@@ -2390,7 +2597,11 @@
           const svg = `<rect x="35" y="45" width="110" height="80" fill="#dcecfb" stroke="#344b65"/><text x="50" y="75" font-size="20">Plan</text><text x="50" y="110" font-size="23">${length} cm</text><path d="M165 85H335" stroke="#344b65" stroke-width="3"/><text x="190" y="65" font-size="23">· ${scale}</text><rect x="355" y="45" width="175" height="80" fill="#e1f1e8" stroke="#344b65"/><text x="370" y="75" font-size="20">Wirklichkeit</text><text x="370" y="110" font-size="23">? cm</text><text x="35" y="195" font-size="21">Erst gleiche Einheiten; danach cm in m umrechnen.</text>`;
           return visualFigure(svg, `Maßstab 1 : ${scale}: Jeder Zentimeter auf dem Plan steht für ${scale} Zentimeter in der Wirklichkeit. Die Kästen sind Denkhilfen, keine maßstäblichen Strecken.`);
         } }];
-        if (item.kind === "divisibility" || item.kind === "factors" || /durch [239] teilbar/.test(item.question)) {
+        if (item.kind === "factors") return [{name: "Fehlenden Faktor finden", draw: () => {
+          const svg = '<rect x="30" y="65" width="110" height="65" fill="#dcecfb" stroke="#344b65"/><rect x="205" y="65" width="110" height="65" fill="#e1f1e8" stroke="#344b65"/><rect x="390" y="65" width="110" height="65" fill="#fce9be" stroke="#344b65"/><text x="68" y="108" font-size="30">2</text><text x="155" y="108" font-size="30">·</text><text x="243" y="108" font-size="30">2</text><text x="335" y="108" font-size="30">· 2 ·</text><text x="430" y="108" font-size="30">?</text>';
+          return visualFigure(svg, "Drei Faktoren sind 2, 2 und 2. Multipliziere sie zuerst. Welche Primzahl fehlt, damit das Produkt 24 ergibt? Eine Ziffernsumme hilft bei dieser Frage nicht.");
+        } }];
+        if (item.kind === "divisibility" || /durch [239] teilbar/.test(item.question)) {
           const value = item.kind ? item.values[0] : Number(item.question.match(/\d+/)[0]);
           return [{ name: "Ziffern einzeln ansehen", draw: () => {
             const digits = String(value).split("");
@@ -2466,6 +2677,20 @@
           more.append(title, explanation); content.append(more);
         }
         return content;
+      }
+
+      function orderLearningModel(a, b, c, showAnswer = true) {
+        const height = 100 + Math.max(Math.ceil(a / 3), c) * 27;
+        let svg = `<text x="25" y="28" font-size="22">${a} einzelne Plättchen + ${b} Gruppen mit je ${c}</text>`;
+        for (let i = 0; i < a; i += 1) svg += `<circle cx="${45 + i % 3 * 24}" cy="${60 + Math.floor(i / 3) * 27}" r="9" fill="#b87913" stroke="#344b65"/>`;
+        svg += '<text x="125" y="78" font-size="30">+</text>';
+        for (let group = 0; group < b; group += 1) {
+          const x = 165 + group * (365 / b), width = 345 / b;
+          svg += `<rect x="${x}" y="43" width="${width}" height="${c * 27 + 12}" rx="5" fill="#eaf2fc" stroke="#344b65"/>`;
+          for (let i = 0; i < c; i += 1) svg += `<circle cx="${x + width / 2}" cy="${62 + i * 27}" r="8" fill="#2873b9" stroke="#344b65"/>`;
+        }
+        svg += `<text x="25" y="${height - 18}" font-size="23">${a} + ${b} · ${c} = ${showAnswer ? a + b * c : "?"}</text>`;
+        return {svg, height, caption: "Links liegen einzelne Plättchen. Rechts zählt jeder Rahmen als eine Gruppe. Multipliziere erst Gruppenanzahl und Plättchen je Gruppe; addiere dann die einzelnen Plättchen."};
       }
 
       function unitLearningModel(amount, dimension, step) {
@@ -2576,8 +2801,7 @@
           for (let i = 0; i < denominator; i += 1) segments.push(rect(30 + i * 480 / denominator, y, 480 / denominator, 28, i < numerator ? color : "#f1f5fa"));
           return segments.join("") + text(30, y + 53, label || `${numerator}/${denominator}`, 18);
         };
-        const grid = (columns, rows, selected = columns * rows) => {
-          const unit = Math.min(25, 165 / rows, 280 / columns);
+        const grid = (columns, rows, selected = columns * rows, unit = Math.min(25, 165 / rows, 280 / columns)) => {
           return Array.from({ length: columns * rows }, (_, i) => rect(30 + (i % columns) * unit, 45 + Math.floor(i / columns) * unit, unit, unit, i < selected ? "#2873b9" : "#f1f5fa")).join("");
         };
         const numberline = (start, finish, zoom = false) => {
@@ -2639,7 +2863,7 @@
               `Probe: ${result} ${c === 0 ? "−" : "+"} ${b} = ${a}.`);
           }
           case "multiply":
-            return model(grid(b, a), "Jedes Kästchen zählt 1; die Reihen sind gleich groß.",
+            return model(grid(b, a, b * a, 18), "Jedes Kästchen zählt 1; die Reihen sind gleich groß. Die Kästchengröße bleibt beim Verändern gleich.",
               `${a} Reihen mit je ${b} Kästchen ergeben ${a * b}.`,
               `${a} · ${b} = ${Array.from({ length: a }, () => b).join(" + ")} = ${a * b}.`,
               `Vertauschen: ${b} · ${a} = ${a * b}. Du zählst dieselben Kästchen nur anders.`,
@@ -2658,11 +2882,13 @@
               `Basis ${a}, Exponent ${b}.`, `${a} hoch ${b} = ${Array.from({ length: b }, () => a).join(" · ")} = ${a ** b}.`,
               `Nicht verwechseln: ${a} · ${b} = ${a * b} ist eine andere Rechnung.`,
               "Quadratzahlen 1² bis 15²: 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225.");
-          case "order":
-            return model(text(25, 65, `${a} + ${b} · ${c} = ${a + b * c}`, 26) + text(25, 135, `(${a} + ${b}) · ${c} = ${(a + b) * c}`, 26), "Die Klammer verändert die Rechenanleitung.",
+          case "order": {
+            const picture = orderLearningModel(a, b, c);
+            return {...model(picture.svg, picture.caption,
               `Ohne Klammer zuerst ${b} · ${c} = ${b * c}, dann ${a} + ${b * c} = ${a + b * c}.`,
               `Mit Klammer zuerst ${a} + ${b} = ${a + b}, dann ${a + b} · ${c} = ${(a + b) * c}.`,
-              "Bei derselben Rangstufe von links nach rechts: 24 : 6 · 2 = 4 · 2 = 8.");
+              "Bei derselben Rangstufe von links nach rechts: 24 : 6 · 2 = 4 · 2 = 8."), height: picture.height};
+          }
           case "divisibility": {
             const sum = [...String(a)].reduce((s, n) => s + Number(n), 0);
             return model(text(35, 70, `Zahl ${a}`, 30) + text(35, 120, `Quersumme: ${[...String(a)].join(" + ")} = ${sum}`, 24),
@@ -2727,18 +2953,29 @@
           }
           case "fraction-sum": {
             const sum = a * 4 + (c === 0 ? b * 3 : -b * 3);
-            return model(bar(a * 4, 12, 25, "#2873b9", `${a}/3 = ${a * 4}/12`) + bar(b * 3, 12, 115, "#25834f", `${b}/4 = ${b * 3}/12`),
-              "Drittel und Viertel werden zu gleich großen Zwölfteln.",
+            const row = (n, y, color) => {
+              let svg = "";
+              for (let i = 0; i < 24; i += 1) svg += rect(30 + i * 20, y, 20, 25, i < n ? color : "#f1f5fa");
+              return svg + line(270, y - 4, 270, y + 29, "#17283f", 3);
+            };
+            const svg = row(a * 4, 35, "#2873b9") + text(30, 24, `${a}/3 = ${a * 4}/12`, 18)
+              + row(b * 3, 105, "#25834f") + text(30, 94, `${b}/4 = ${b * 3}/12`, 18)
+              + (sum >= 0 ? row(sum, 175, "#b87913") : line(30, 188, 510, 188) + line(270, 170, 270, 200)
+                + line(270, 188, 270 + sum * 20, 188, "#b87913", 5) + text(25, 214, "−1", 16) + text(265, 214, "0", 16) + text(500, 214, "1", 16))
+              + text(30, 235, `${a}/3 ${c === 0 ? "+" : "−"} ${b}/4 = ${sum}/12`, 21);
+            return model(svg,
+              sum >= 0 ? "Jede Reihe reicht über ZWEI Ganze. Der dicke Strich nach zwölf Kästchen trennt sie. Jedes Kästchen ist 1/12. Unten steht das Ergebnis."
+                : "Oben zeigen zwei Reihen die Anteile in Zwölfteln. Unten ist eine eigene Zahlengerade von −1 bis 1: Die Mitte ist null. Der gelbe Weg führt vom Nullpunkt zum negativen Ergebnis.",
               `Erweitere ${a}/3 mit 4 → ${a * 4}/12; ${b}/4 mit 3 → ${b * 3}/12.`,
               `Zähler ${c === 0 ? "addieren" : "subtrahieren"}: ${a * 4} ${c === 0 ? "+" : "−"} ${b * 3} = ${sum}.`,
-              `Ergebnis: ${sum}/12. Stückgröße bleibt ein Zwölftel. ${sum < 0 ? "Dieses Ergebnis ist negativ und geht über das Rechnen mit positiven Brüchen hinaus." : "Kürze anschließend, wenn ein gemeinsamer Teiler vorhanden ist."}`);
+              `Ergebnis: ${sum}/12. Stückgröße bleibt ein Zwölftel. ${sum < 0 ? "Du ziehst mehr ab, als vorhanden ist: Das Ergebnis ist negativ (Zusatz für später). Die mittlere senkrechte Markierung bedeutet hier null." : "Kürze anschließend, wenn ein gemeinsamer Teiler vorhanden ist."}`);
           }
           case "fraction-product": {
             const cells = Array.from({ length: 12 }, (_, i) => {
               const x = i % 4, y = Math.floor(i / 4);
               return rect(55 + x * 75, 35 + y * 50, 75, 50, x < a && y < b ? "#18774c" : x < a ? "#c2d9ef" : "#f1f5fa");
             }).join("");
-            return model(cells, "Blau markiert den ersten Anteil; Grün zeigt den Anteil davon.",
+            return model(cells, "Hellblau UND Grün zusammen markieren den ersten Anteil. Grün zeigt den ausgewählten Teil davon. Die weißen Kästchen gehören nicht zum ersten Anteil.",
               `Zuerst ${a}/4 der Fläche auswählen.`, `Davon ${b}/3 nehmen: ${a * b} von 12 kleinen Rechtecken.`,
               `${a}/4 · ${b}/3 = ${a * b}/12. Ein Anteil kleiner als 1 macht das Produkt kleiner.`);
           }
@@ -2801,13 +3038,18 @@
           case "time": {
             const start = 9 * 60 + a, finish = start + b;
             const clock = t => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
-            return model(text(35, 80, `${clock(start)} → ${clock(finish)}`, 34) + text(35, 145, `Dauer: ${b} min`, 30),
-              "Eine Zeitspanne wird in Minuten berechnet; die Uhrzeit verwendet 60 Minuten pro Stunde.",
-              `Start ${clock(start)} = ${start} Minuten nach Mitternacht.`, `Addiere die Dauer: ${start} + ${b} = ${finish} Minuten.`,
-              `Teile durch 60: ${Math.floor(finish / 60)} ganze Stunden, Rest ${finish % 60} Minuten → ${clock(finish)}.`);
+            const x = minute => 40 + (minute - 540) * 470 / 180;
+            let svg = line(40, 125, 510, 125);
+            for (let minute = 540; minute <= 720; minute += 30) svg += line(x(minute), 118, x(minute), 132) + text(x(minute) - 15, 165, clock(minute), 15);
+            svg += line(x(start), 95, x(finish), 95, "#25834f", 5) + text(35, 35, `${clock(start)} + ${b} Minuten = ${clock(finish)}`, 24);
+            return model(svg, "Die Uhrzeiten auf der Skala sind immer eine halbe Stunde auseinander. Grün zeigt die Dauer vom Start bis zum Ende.",
+              `Start ist ${clock(start)}.`, `Bis zur nächsten vollen Stunde fehlen ${60 - a} Minuten.`,
+              b < 60 - a ? `Die Dauer ${b} Minuten endet noch vor dieser vollen Stunde: ${clock(finish)}.`
+                : `Danach bleiben ${b - (60 - a)} Minuten. Das Ende ist ${clock(finish)}.`,
+              "Achtung: Eine Stunde hat 60 Minuten. Rechne Uhrzeiten nicht wie Dezimalzahlen mit 100.");
           }
           case "percent":
-            return model(grid(10, 10, a), "100 Kästchen sind das Ganze; die gefärbten Kästchen zeigen den Prozentsatz.",
+            return model(grid(10, 10, a) + text(320, 65, `Ganzes: ${b}`, 22) + text(320, 110, `Anteil: ${a} %`, 22) + text(320, 155, `Menge: ${f(a * b / 100)}`, 22), "100 Kästchen zeigen den Anteil in Prozent, NICHT 100 einzelne Dinge. Rechts steht, wie viele Dinge bei deinem Ganzen dazugehören.",
               `${a} % = ${a}/100 = ${f(a / 100)}.`, `Der Anteil von ${b} ist ${b} · ${f(a / 100)} = ${f(a * b / 100)}.`,
               "Das Bild zeigt den Anteil, nicht automatisch die Anzahl der Dinge: Dieselben 25 % sind bei 80 Dingen 20, bei 40 Dingen nur 10.");
           case "proportion":
@@ -2825,9 +3067,9 @@
           }
           case "pattern": {
             let svg = line(50, 200, 500, 200) + line(50, 200, 50, 30) + text(510, 205, "x", 17) + text(45, 22, "y", 17);
-            for (let n = 0; n <= 5 * a; n += a) svg += line(45, 200 - n * 6, 50, 200 - n * 6) + text(15, 205 - n * 6, n, 14);
+            for (let n = 0; n <= 25; n += 5) svg += line(45, 200 - n * 6, 50, 200 - n * 6) + text(15, 205 - n * 6, n, 14);
             for (let i = 0; i <= 5; i += 1) svg += `<circle cx="${50 + i * 80}" cy="${200 - i * a * 6}" r="6" fill="#1456a0"/>` + text(45 + i * 80, 225, i, 16);
-            return model(svg, `x zählt Schritte von 0 bis 5; y zeigt den Wert. Zwischen zwei y-Markierungen liegen ${a} Einheiten.`,
+            return model(svg, "x zählt Schritte von 0 bis 5; y zeigt den Wert. Die y-Skala bleibt immer gleich: 0 bis 25. Zwischen zwei Markierungen liegen 5 Einheiten.",
               `Regel: Wert = Schrittnummer · ${a}.`, `Wertetabelle: 0 → 0; 1 → ${a}; 2 → ${2 * a}; 3 → ${3 * a}; 4 → ${4 * a}; 5 → ${5 * a}.`,
               `Jeder weitere Schritt erhöht den Wert um ${a}. Im Bild liegen die Werte auf einer Geraden.`);
           }
@@ -2838,7 +3080,8 @@
               `Fahrt hinzufügen: ${a * b} € + ${c} € = ${a * b + c} €.`,
               `Antwort: Insgesamt sind es ${a * b + c} €. Die Rechnung ${a} · (${b} + ${c}) würde die Fahrt ${a}-mal bezahlen.`);
           case "unknown":
-            return model(rect(35, 50, 160, 65) + text(50, 92, `x + 5 = ${a + 5}`, 24) + text(35, 175, "Prüfziel: x + 5 = 12", 26),
+            return model(rect(35, 65, 460, 65) + text(45, 35, "Gesucht: x + 5 = 12", 26) + text(50, 106, `${a} + 5 = ${a + 5}`, 27)
+              + text(35, 185, a === 7 ? "12 = 12 · Das passt!" : `${a + 5} ist ${a + 5 < 12 ? "kleiner" : "größer"} als 12`, 24),
               "Der Regler setzt eine mögliche Zahl für x ein.",
               `Versuch x = ${a}: ${a} + 5 = ${a + 5}.`, a === 7 ? "Das passt! Die gesuchte Zahl ist 7." : `Es fehlen oder bleiben ${Math.abs(12 - (a + 5))}; verändere x.`,
               "Rückwärts: 12 − 5 = 7. Probe: 7 + 5 = 12.");
@@ -2850,10 +3093,10 @@
               "Beim Messen: Scheitel auf den Mittelpunkt, ein Schenkel auf die Grundlinie.", "Lies auf der Skala ab, die am Grundschenkel mit 0 beginnt. Die andere Skala zeigt sonst den falschen Winkel.");
           }
           case "parallel": {
-            const endpoint = 280 + a * 30, length = Math.sqrt(3 * 3 + a * a);
+            const endpoint = 280 + a * 30;
             return model(line(40, 190, 520, 190) + line(40, 155, 520, 155, "#a1b8cd") + line(280, 100, endpoint, 190, "#1456a0", 4) + line(280, 100, 280, 190, "#25834f", 2) + `<circle cx="280" cy="100" r="7" fill="#1456a0"/>`,
               "Grün ist die Senkrechte; Blau eine mögliche schrägere Verbindung. Die zwei waagerechten Geraden sind parallel.",
-              "Der senkrechte Abstand ist hier 3 Einheiten.", `Die blaue Verbindung ist ${a === 0 ? "" : "ungefähr "}${f(length)} Einheiten lang.`,
+              "Der senkrechte Abstand ist hier 3 Einheiten.", a === 0 ? "Blau und Grün liegen jetzt auf derselben Strecke." : "Die blaue schräge Verbindung ist länger. Zum Entdecken brauchst du noch keine Formel für diese Länge.",
               a === 0 ? "Senkrecht ist die Verbindung am kürzesten. Nur diese Länge nennt man den Abstand." : "Die schräge Verbindung ist länger als die Senkrechte.");
           }
           case "circle":
@@ -2862,11 +3105,12 @@
               `Radius r = ${a} cm.`, `Durchmesser d = 2 · ${a} = ${2 * a} cm.`,
               `Zum Zeichnen den Zirkel ${a} cm öffnen. Die Spitze bleibt auf dem Mittelpunkt.`);
           case "symmetry": {
-            const x = n => 280 + n * 40, y = n => 125 - n * 23;
+            const x = n => 280 + n * 23, y = n => 125 - n * 23;
             const bx = -a, by = c === 0 ? b : -b;
             let svg = line(40, 125, 520, 125) + line(280, 15, 280, 235);
-            for (let n = -4; n <= 4; n += 1) svg += text(x(n) - 5, 145, n, 14);
+            for (let n = -4; n <= 4; n += 1) svg += line(x(n), 120, x(n), 130) + text(x(n) - 5, 145, n, 14);
             for (let n = -4; n <= 4; n += 1) if (n !== 0) svg += line(275, y(n), 285, y(n)) + text(255, y(n) + 5, n, 14);
+            svg += text(520, 115, "x", 18) + text(295, 22, "y", 18);
             svg += `<circle cx="${x(a)}" cy="${y(b)}" r="7" fill="#1456a0"/><circle cx="${x(bx)}" cy="${y(by)}" r="7" fill="#25834f"/>` +
               text(x(a) - 20, y(b) - 12, `P(${a}|${b})`, 17) + text(x(bx) - 25, y(by) - 12, `P′(${bx}|${by})`, 17);
             return model(svg, "Blau ist der Ausgangspunkt; Grün der Spiegelpunkt. Die schwarze Mitte ist der Ursprung.",
@@ -2875,10 +3119,10 @@
               `Bildpunkt P′ = (${bx} | ${by}). Die Abstände zur Achse bzw. zum Zentrum sind gleich.`);
           }
           case "body": {
-            const w = a === 0 ? 70 : 55, h = 55;
+            const w = a === 0 ? 220 / 3 : 55, h = 55;
             const net = [[30, 85, w, h], [30 + w, 85, h, h], [30 + w + h, 85, w, h], [30 + 2 * w + h, 85, h, h], [30, 30, w, h], [30, 140, w, h]].map(values => rect(...values)).join("");
-            return model(net + rect(360, 35, w, h) + rect(360, 145, w, h),
-              "Links: aufgeklapptes Netz. Rechts: Grundriss oben und Aufriss unten (hier gleiche Höhe und Tiefe).",
+            return model(net + rect(360, 35, w, h) + text(360, 115, "von oben", 17) + rect(360, 145, w, h) + text(360, 225, "von vorn", 17),
+              "Links: aufgeklapptes Netz. Rechts oben: Blick von oben (Grundriss). Rechts unten: Blick von vorn (Aufriss). Hier sind Höhe und Tiefe gleich.",
               a === 0 ? "Ein Quader hat 6 Rechteckflächen, 12 Kanten und 8 Ecken. Gegenüberliegende Flächen sind gleich groß." : "Ein Würfel hat 6 gleiche Quadratflächen, 12 gleich lange Kanten und 8 Ecken.",
               "Falte das Netz: die vier Flächen in der Reihe bilden die Seiten; die zwei angefügten Flächen schließen oben und unten.",
               "Grundriss ist der Blick von oben, Aufriss der Blick von vorn. Diese Ansichten zeigen echte Längen; ein Schrägbild verkürzt die nach hinten laufenden Kanten.");
@@ -2897,12 +3141,16 @@
             return model(shapes[a], `Schrägansicht: ${names[a]}. Verdeckte Kanten sind teilweise weggelassen.`,
               properties[a], `Alltagsbeispiel: ${examples[a]}.`, "Vergleiche die Grundflächen und prüfe, ob eine Spitze oder ein gekrümmter Mantel vorhanden ist.");
           }
-          case "rectangle":
-            return model(grid(a, b) + text(315, 70, `U = ${2 * (a + b)}`, 24) + text(315, 120, `A = ${a * b}`, 24),
+          case "rectangle": {
+            const unit = 20;
+            return model(grid(a, b, a * b, unit) + `<rect x="30" y="45" width="${a * unit}" height="${b * unit}" fill="none" stroke="#25834f" stroke-width="4"/>`
+              + text(315, 70, `Umfang: ${2 * (a + b)}`, 21) + text(315, 120, `Fläche: ${a * b}`, 21)
+              + text(30, 235, `${a} Kästchen breit · ${b} Reihen hoch`, 19),
               "Innen sind Einheitsquadrate. Der Rand besteht aus zwei langen und zwei kurzen Seiten.",
               `Umfang: ${a} + ${b} + ${a} + ${b} = ${2 * (a + b)} Längeneinheiten.`,
               `Fläche: ${b} Reihen mit ${a} Quadraten = ${a * b} Flächeneinheiten.`,
               "Bei Zentimeter-Seiten ist der Umfang in cm und die Fläche in cm². Quadratzentimeter zählt Quadrate, nicht Randstücke.");
+          }
           case "compound": {
             let svg = "";
             for (let row = 0; row < 4; row += 1) for (let col = 0; col < 6; col += 1) {
@@ -2915,11 +3163,11 @@
               `Restfläche: 24 − ${a * b} = ${24 - a * b}. Der Umfang bleibt bei dieser Eck-Aussparung 20 Längeneinheiten: wegfallende Randstrecken werden durch gleich lange Innenrandstrecken ersetzt.`);
           }
           case "cube": {
-            const width = a * 28, height = c * 25, depth = b * 12;
+            const width = a * 25, height = c * 25, depth = b * 12;
             const front = rect(80, 80, width, height);
             const outline = line(80, 80, 80 + depth, 80 - depth) + line(80 + width, 80, 80 + width + depth, 80 - depth) + line(80 + depth, 80 - depth, 80 + width + depth, 80 - depth) + line(80 + width + depth, 80 - depth, 80 + width + depth, 80 + height - depth) + line(80 + width, 80 + height, 80 + width + depth, 80 + height - depth);
             return model(front + outline + text(310, 65, `l=${a}, b=${b}, h=${c}`, 21) + text(310, 110, `V = ${a * b * c}`, 24) + text(310, 155, `O = ${2 * (a * b + a * c + b * c)}`, 24),
-              "Schrägbild eines Quaders: vorne Länge und Höhe; die schrägen Kanten zeigen die Tiefe.",
+              "Schrägbild eines Quaders: l heißt Länge, b Breite, h Höhe. V zählt Würfel innen (Volumen), O Quadrate außen (Oberfläche). Die schrägen Kanten zeigen die Tiefe verkürzt.",
               `Eine Schicht: ${a} · ${b} = ${a * b} Einheitswürfel.`, `${c} Schichten: V = ${a * b} · ${c} = ${a * b * c} Kubikeinheiten.`,
               `Außenflächen paarweise: 2 · (${a * b} + ${a * c} + ${b * c}) = ${2 * (a * b + a * c + b * c)} Quadrateinheiten.`,
               "Bei zusammengesetzten Quadern addierst du Volumina. Für die Oberfläche zählen gemeinsame Kontaktflächen nicht: Sie liegen innen.");
@@ -2936,8 +3184,15 @@
           case "chart": {
             const values = [4, 3, 3], colors = ["#2873b9", "#25834f", "#b87913"];
             let svg = "";
-            if (a === 0) svg = values.map((n, i) => rect(70 + i * 140, 180 - n * 30, 75, n * 30, colors[i]) + text(75 + i * 140, 212, `${n}`, 22)).join("");
-            if (a === 1) svg = values.map((n, i) => rect(130, 35 + i * 55, n * 70, 35, colors[i]) + text(45, 60 + i * 55, `${n}`, 22)).join("");
+            if (a === 0) {
+              svg = line(45, 30, 45, 180) + line(45, 180, 510, 180);
+              for (let n = 0; n <= 5; n += 1) svg += text(20, 185 - n * 30, n, 15);
+              svg += values.map((n, i) => rect(70 + i * 140, 180 - n * 30, 75, n * 30, colors[i]) + text(70 + i * 140, 212, ["Fuß", "Rad", "Bus"][i], 20)).join("");
+            }
+            if (a === 1) {
+              svg = values.map((n, i) => rect(130, 35 + i * 55, n * 70, 35, colors[i]) + text(45, 60 + i * 55, ["Fuß", "Rad", "Bus"][i], 20)).join("");
+              for (let n = 0; n <= 5; n += 1) svg += text(125 + n * 70, 230, n, 16);
+            }
             if (a === 2) {
               let start = -Math.PI / 2;
               svg = values.map((n, i) => {
@@ -2947,7 +3202,7 @@
               }).join("");
             }
             if (a === 3) { let x = 30; svg = values.map((n, i) => { const out = rect(x, 75, n * 48, 55, colors[i]); x += n * 48; return out; }).join(""); }
-            return model(svg, "Daten: Blau = 4 (40 %), Grün = 3 (30 %), Gelb = 3 (30 %). Dieselben Daten in anderer Darstellung.",
+            return model(svg, "Schulweg von 10 Kindern: Blau = zu Fuß, 4 Kinder (40 %); Grün = Rad, 3 Kinder (30 %); Gelb = Bus, 3 Kinder (30 %). Dieselben Daten in anderer Darstellung.",
               "Gesamtzahl 10; relative Häufigkeiten 4/10, 3/10 und 3/10.",
               a === 2 ? "Kreiswinkel: 40 % · 360° = 144°; 30 % · 360° = 108°." : "Die dargestellten Mengen bleiben 4, 3 und 3. Nur die Darstellung wechselt.",
               "Vergleiche die größte Kategorie und die zwei gleichen Kategorien. Ein sinnvolles Diagramm benennt außerdem Thema, Kategorien und Einheit.");
@@ -3172,28 +3427,35 @@
           decimal: "Färbe Zehntel mit dem Regler. Zehn Kästchen bilden ein Ganzes.",
           negative: "Wähle den Start. Plus geht nach rechts, Minus nach links.",
           units: "Wie viele kleine Stücke passen hinein? Beginne mit einer Strecke. Schiebe das Bild Schritt für Schritt weiter.",
-          percent: "Ändere den Prozentsatz. Verändere dann die Grundmenge.",
-          equation: "Ändere x. Finde die Stellung, in der die Waage gerade steht.",
+          percent: "Das Ganze ist die gesamte Menge. Ändere zuerst nur den Prozentsatz, danach nur das Ganze.",
+          equation: "Gesucht: 2 · x + 3 = 11. Ändere x. Finde die Stellung, in der beide Seiten gleich viel wiegen.",
           geometry: "Ziehe den Regler. Bei 90° steht der blaue Schenkel senkrecht.",
           area: "Ändere die Seitenlängen. Blau: Fläche. Grün: Außenrand.",
           chance: "Tippe auf »Würfel 10-mal werfen«. Vergleiche die Säulen.",
           "word-problem": "Ändere die Kartenanzahl. Die Fahrt wird nur einmal bezahlt.",
-          check: "Rechne zuerst die Multiplikation. Wähle dann dein Ergebnis."
+          check: "Wie viele Plättchen sind es zusammen? Rechne zuerst die Malaufgabe. Tippe dann dein Ergebnis ein."
         };
         document.querySelectorAll(".discovery[data-lab]").forEach(lab => {
           lab.querySelector(".discovery-intro").textContent = briefs[lab.dataset.lab];
           lab.setAttribute("aria-label", lab.querySelector("h3").textContent);
+          if (lab.dataset.lab === "equation") {
+            const question = document.createElement("p");
+            question.className = "experiment-expression";
+            question.textContent = "Finde x: 2 · x + 3 = 11";
+            lab.querySelector(".discovery-intro").after(question);
+          }
         });
         const controlNames = {
           "round-number": "Deine Zahl", "factor-a": "Erster Faktor", "factor-b": "Zweiter Faktor",
           "fraction-numerator": "Blaue Stücke (Zähler)", "fraction-denominator": "Alle Stücke (Nenner)",
           "decimal-tenths": "Gefärbte Zehntel", "negative-start": "Startzahl",
           "negative-move": "Schritte: + rechts, − links", "unit-amount": "Wie viele Meterstücke?", "unit-step": "Bild Schritt für Schritt",
-          "percent-rate": "Prozentsatz", "percent-base": "Grundmenge",
+          "percent-rate": "Anteil in Prozent", "percent-base": "Das Ganze (gesamte Menge)",
           "equation-x": "Wert von x", "angle-size": "Winkelgröße",
           "rectangle-length": "Länge", "rectangle-width": "Breite",
           "story-quantity": "Anzahl der Karten", "story-price": "Preis je Karte",
-          "story-extra": "Fahrtkosten (einmal)"
+          "story-extra": "Fahrtkosten (einmal)",
+          "check-a": "Einzelne Plättchen", "check-b": "Anzahl der Gruppen", "check-c": "Plättchen je Gruppe"
         };
         document.querySelectorAll('.discovery input[type="range"][data-control]').forEach(field => {
           const label = field.closest("label");
