@@ -61,6 +61,10 @@
     .fraction-gallery figure { margin: 0; padding: .4rem; border: 1px solid #c3d4e5; border-radius: 10px; text-align: center; }
     .coach-picture .fraction-gallery svg { max-width: 240px; }
     .fraction-gallery figcaption { font-size: 1rem; }
+    .unit-learning { min-width: 0; }
+    .unit-learning svg { display: block; width: 100%; max-width: 680px; height: auto; margin: .7rem auto; }
+    .unit-learning h4 { font-size: 1.2rem; margin: .5rem 0; }
+    [data-model="units"].model-tiles { display: block; }
     @media print { .coach-controls, .coach-buttons { display: none; } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
     html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
@@ -229,6 +233,9 @@
     .discovery-controls > label { display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: .8rem; border: 1px solid #c3d4e5; border-radius: 10px; background: #f5f9ff; }
     .discovery-controls input[type="range"] { grid-column: 1/-1; width: 100%; min-height: 44px; }
     .discovery-controls output { padding: .1rem .45rem; border-radius: 6px; background: #dceafb; }
+    [data-lab="units"] .discovery-controls > label { grid-template-columns: minmax(0, 1fr); gap: .5rem; align-content: start; }
+    [data-lab="units"] .discovery-controls output { width: fit-content; max-width: 100%; font-size: .95rem; }
+    [data-lab="units"] .discovery-controls select { width: 100%; min-width: 0; }
     .discovery-controls input[type="radio"] { width: 24px; min-height: 24px; }
     .discovery-visual, .visual svg { width: min(100%, 560px); overflow: hidden; }
     .diagram-note { margin: .5rem 0; color: var(--muted); font-size: .95rem; }
@@ -642,11 +649,12 @@
         <h3>Entdeckerstation: Warum sind Flächeneinheiten-Sprünge so groß?</h3>
         <p class="discovery-intro">Wähle, was du umrechnest. Sieh, wie aus demselben Maß je nach Länge, Fläche oder Volumen ein anderer Umrechnungsfaktor wird.</p>
         <div class="discovery-controls">
-          <label for="unit-kind">Art des Maßes <select id="unit-kind" data-control="unit-kind"><option value="length">Länge</option><option value="area">Fläche</option><option value="volume">Volumen</option></select></label>
-          <label for="unit-amount">Anzahl der Einheiten <input id="unit-amount" data-control="unit-amount" type="range" min="1" max="5" value="1"><output data-out="unit-amount">1</output></label>
+          <label for="unit-kind">Was möchtest du messen? <select id="unit-kind" data-control="unit-kind"><option value="length">Eine Strecke</option><option value="area">Einen Boden</option><option value="volume">Eine Kiste</option></select></label>
+          <label for="unit-amount">Wie viele Meterstücke? <input id="unit-amount" data-control="unit-amount" type="range" min="1" max="5" value="1"><output data-out="unit-amount">1</output></label>
+          <label for="unit-step">Bild Schritt für Schritt <input id="unit-step" data-control="unit-step" type="range" min="0" max="3" value="0"><output data-out="unit-step">1 von 4</output></label>
         </div>
         <p class="discovery-result" data-out="unit-result" aria-live="polite"></p>
-        <p class="discovery-feedback">Aha-Frage: Eine Fläche hat zwei Seitenlängen; ein Körper hat drei Richtungen. Was bedeutet das für den Umrechnungsfaktor?</p>
+        <p class="discovery-feedback">Probiere zuerst die Strecke aus. Schiebe „Bild Schritt für Schritt“ langsam nach rechts. Erkläre dann: Warum wird die Zahl größer, obwohl die Strecke gleich lang bleibt?</p>
       </div>
       <details><summary>Üben: Einheiten · Aufgaben mit steigendem Schwierigkeitsgrad</summary>
         <ol><li><span class="level level-easy">Leicht</span> 0,75 l in ml</li><li><span class="level level-medium">Mittel</span> 4&nbsp;250 m in km und 6&nbsp;300 g in kg</li><li><span class="level level-hard">Knifflig</span> 2,5 m² in cm². Überlege: Wie viele Zentimeter stecken in einem Meter – und warum wird bei Fläche zweimal umgerechnet?</li></ol>
@@ -1377,20 +1385,23 @@
           case "units": {
             const kind = control(lab, "unit-kind").value;
             const amount = number(lab, "unit-amount");
-            output(lab, "unit-amount", String(amount));
-            const details = {
-              length: [`${amount} m`, `${numberFormat.format(amount * 100)} cm`, "1 m = 100 cm: einmal mit 100 multiplizieren."],
-              area: [`${amount} m²`, `${numberFormat.format(amount * 10000)} cm²`, "1 m² ist ein Quadrat von 100 cm mal 100 cm: 100 · 100 = 10 000 cm²."],
-              volume: [`${amount} m³`, `${numberFormat.format(amount * 1000000)} cm³`, "1 m³ ist ein Würfel von 100 cm mal 100 cm mal 100 cm: 100 · 100 · 100 = 1 000 000 cm³."]
-            }[kind];
-            const shapes = {
-              length: '<path d="M60 95H390" stroke="#1456a0" stroke-width="6"/><path d="M60 80v30M390 80v30" stroke="#1456a0" stroke-width="3"/>',
-              area: '<rect x="145" y="25" width="115" height="105" fill="#dcecfb" stroke="#1456a0" stroke-width="3"/><path d="M145 60H260M145 95H260M183 25V130M222 25V130" stroke="#1456a0"/>',
-              volume: '<path d="M160 60l55 -35 85 20 -55 35z" fill="#dcecfb" stroke="#1456a0"/><path d="M160 60v70l85 10V80z" fill="#bdd7f0" stroke="#1456a0"/><path d="M245 80l55 -35v70l-55 25z" fill="#8cb9e3" stroke="#1456a0"/>'
-            };
-            setDiagram(lab, "units", `${shapes[kind]}<text x="240" y="156" text-anchor="middle" fill="#17283f" font-size="16">${kind === "length" ? "1 Richtung: × 100" : kind === "area" ? "2 Richtungen: × 100 × 100" : "3 Richtungen: × 100 × 100 × 100"}</text>`,
-              details[2]);
-            output(lab, "unit-result", `${details[0]} = ${details[1]}. ${details[2]}`);
+            const step = number(lab, "unit-step");
+            const dimension = ["length", "area", "volume"].indexOf(kind);
+            const model = unitLearningModel(amount, dimension, step);
+            const units = ["m", "m²", "m³"];
+            control(lab, "unit-amount").disabled = step < 3;
+            output(lab, "unit-amount", step < 3 ? "Erst im 4. Bild verändern" : `${amount} ${units[dimension]}`);
+            output(lab, "unit-step", `${step + 1} von 4: ${model.title}`);
+            const label = control(lab, "unit-amount").closest("label").querySelector("span");
+            if (label) label.textContent = ["Wie viele Meterstücke?", "Wie viele Bodenquadrate?", "Wie viele große Kisten?"][dimension];
+            control(lab, "unit-step").setAttribute("aria-valuetext", `${step + 1} von 4: ${model.title}`);
+            modelBox(lab, "units").replaceChildren(unitLearningFigure(model));
+            output(lab, "unit-result", model.steps[step]);
+            lab.querySelector(".discovery-feedback").textContent = [
+              "Probiere 2 m und 5 m aus. Jedes Meterstück enthält 100 Zentimeter. Warum bleibt die Strecke beim Wechsel der Einheit gleich lang?",
+              "Zähle erst eine Reihe, dann alle Reihen. Warum passen in das Bodenquadrat nicht nur 10, sondern 100 kleine Quadrate?",
+              "Zähle erst eine Schicht, dann alle Schichten. Was fehlt, wenn du nur die Würfel auf dem Boden der Kiste zählst?"
+            ][dimension];
             break;
           }
           case "percent": {
@@ -1686,7 +1697,7 @@
           ],
           groessen: [
             ["Messen und Schätzen: Zahlwert und Einheit gehören zusammen", "measure", "Eine Messung vergleicht eine Größe mit einer Einheit. Bei 3 cm passt eine Zentimeter-Einheit dreimal in die Länge. Ohne Einheit ist eine Größenangabe unvollständig.", "Eine Schätzhilfe ist ein Gegenstand, dessen ungefähre Größe du kennst: ein Türblatt etwa 2 m hoch, eine Wasserflasche 1 l. Solche Vergleiche helfen, unplausible Ergebnisse zu erkennen.", "Schätze die Länge deines Hefts, miss dann mit dem Lineal und vergleiche. Wie groß war deine Abweichung?", "Miss ein Heft und eine Tür. Lies am Lineal vom Nullstrich aus, nicht vom Rand. Notiere Schätzung, Messwert und Einheit."],
-            ["Einheiten umrechnen – auch Fläche und Volumen", "units", "Bei kleineren Einheiten brauchst du mehr Einheiten für dieselbe Größe. 1 m und 100 cm beschreiben dieselbe Länge. centi bedeutet Hundertstel, milli Tausendstel, dezi Zehntel, kilo Tausend und Mega eine Million.", "Bei Fläche rechnest du in zwei Richtungen: 1 m² = 100 cm · 100 cm. Bei Volumen in drei Richtungen. Zeit rechnet anders: 1 h = 60 min, nicht 100 min.", "Wechsle Länge, Fläche und Volumen. Erkläre, warum der Faktor nicht immer 100 ist."],
+            ["Einheiten umrechnen: kleine Stücke zählen", "units", "Ein Meterband bleibt gleich lang, egal ob du Meter oder Zentimeter zählst. Ein Zentimeter ist viel kürzer als ein Meter. Deshalb brauchst du 100 Zentimeter für dieselbe Länge wie 1 Meter.", "Bei einem Boden zählst du kleine Quadrate, nicht nur die Stücke am Rand. In einer Kiste zählst du kleine Würfel, auch die über dem Boden. Die Bilder zeigen dir erst eine Reihe, dann alle Reihen und schließlich alle Schichten.", "Beginne mit der Strecke und schiebe den Bildschritt von 0 bis 3. Probiere danach den Boden und die Kiste. Was zählst du jeweils: Abschnitte, Fliesen oder Würfel?"],
             ["Mit Größen rechnen: Einheiten zuerst angleichen", "time", "2 h 15 min sind 135 min. Erst wenn alle Angaben dieselbe Einheit haben, kannst du sie sicher addieren oder vergleichen.", "Bei Uhrzeiten musst du Übergänge über 60 Minuten beachten. Von 9:45 bis 10:20 sind es 15 Minuten bis 10:00 plus 20 Minuten, also 35 Minuten.", "Ändere die Startminute. Warum ist die Zeitspanne nicht einfach die Differenz der Ziffern hinter dem Doppelpunkt?"]
           ],
           prozent: [
@@ -1945,7 +1956,7 @@
           negative: [["Starttemperatur", -8, 8, -5], ["Änderung", -8, 8, 3]],
           distance: [["Erster Punkt", -8, 8, -3], ["Zweiter Punkt", -8, 8, 4]],
           measure: [["Länge in Zentimetern", 1, 10, 6]],
-          units: [["Meter-Einheiten", 1, 5, 1], ["Größe", ["Länge", "Fläche", "Volumen"], 0]],
+          units: [["Wie viele große Einheiten?", 1, 5, 1], ["Was messen wir?", ["Strecke", "Boden", "Kiste"], 0], ["Bildschritt (0 bis 3)", 0, 3, 0]],
           time: [["Startminute nach 9 Uhr", 0, 59, 45], ["Dauer in Minuten", 1, 90, 35]],
           percent: [["Prozentsatz", 0, 100, 25], ["Ganzes", 20, 100, 80]],
           proportion: [["Bekannte Anzahl", 1, 8, 3], ["Stückpreis in Euro", 1, 6, 2], ["Gesuchte Anzahl", 1, 12, 5]],
@@ -2016,9 +2027,14 @@
             value.textContent = field.tagName === "SELECT" ? field.selectedOptions[0].textContent : field.value;
             return Number(field.value);
           });
+          if (kind === "units") {
+            fields[0].field.disabled = values[2] < 3;
+            if (values[2] < 3) fields[0].value.textContent = "Erst bei Bildschritt 3 verändern";
+            fields[2].value.textContent = ["Ein großes Stück", "Eine Reihe zählen", "Alle kleinen Stücke zählen", "Mehrere große Stücke"][values[2]];
+          }
           const model = experimentModel(kind, values);
           coach.update([
-            { name: "Entdeckerbild", draw: () => visualFigure(model.svg, model.caption) },
+            { name: "Entdeckerbild", draw: () => kind === "units" ? unitLearningFigure(model) : visualFigure(model.svg, model.caption) },
             ...lessonVisualModels(kind, values)
           ], model.steps);
         }
@@ -2332,11 +2348,7 @@
             const svg = [0, 1, 2, 3, 4, 5].map((n, i) => `<rect x="${55 + i * 75}" y="50" width="75" height="60" fill="#dcecfb" stroke="#344b65"/><rect x="${55 + i * 75}" y="110" width="75" height="60" fill="#e1f1e8" stroke="#344b65"/><text x="${83 + i * 75}" y="88" font-size="24">${n}</text><text x="${83 + i * 75}" y="150" font-size="24">${a * n}</text>`).join("") + '<text x="20" y="88" font-size="20">x</text><text x="20" y="150" font-size="20">y</text>';
             return visualFigure(svg, `Oben steht die Schrittnummer x, direkt darunter ihr Wert y. Jede Spalte ist ein Punkt im Diagramm. Hier gilt y = ${a} · x.`);
           } }];
-          case "units": return [{ name: "Umrechnen in jeder Richtung", draw: () => {
-            const dimensions = b + 1;
-            const svg = Array.from({length:dimensions}, (_, i) => `<rect x="40" y="${25 + i * 60}" width="165" height="42" rx="6" fill="#dcecfb" stroke="#344b65"/><text x="55" y="${53 + i * 60}" font-size="21">Richtung ${i + 1}</text><text x="240" y="${53 + i * 60}" font-size="22">1 m = 10 dm</text>`).join("") + `<text x="40" y="235" font-size="22">Gesamtfaktor: ${Array.from({length:dimensions}, () => "10").join(" · ")} = ${10 ** dimensions}</text>`;
-            return visualFigure(svg, `Länge hat eine Richtung, Fläche zwei, Volumen drei. Bei ${a} m${b === 1 ? "²" : b === 2 ? "³" : ""} wird der Faktor ${10 ** dimensions} auf den ganzen Zahlwert angewendet.`);
-          } }];
+          case "units": return [{ name: "Alle kleinen Stücke zählen", draw: () => unitLearningFigure(unitLearningModel(a, b, 3)) }];
           case "data": case "statistics":
             return [{ name: "Balken statt Säulen", draw: () => {
               const scale = 360 / Math.max(1, a, b, c);
@@ -2437,6 +2449,115 @@
           });
           return flow;
         } }];
+      }
+
+      function unitLearningFigure(model) {
+        const content = document.createElement("div");
+        content.className = "unit-learning";
+        const heading = document.createElement("h4");
+        heading.textContent = model.title;
+        content.append(heading, visualFigure(model.svg, model.caption, model.height));
+        if (model.extension) {
+          const more = document.createElement("details");
+          const title = document.createElement("summary");
+          title.textContent = "Schon verstanden? Weiter zu ganz kleinen Zentimeter-Stücken";
+          const explanation = document.createElement("p");
+          explanation.textContent = model.extension;
+          more.append(title, explanation); content.append(more);
+        }
+        return content;
+      }
+
+      function unitLearningModel(amount, dimension, step) {
+        const format = n => n.toLocaleString("de-DE");
+        const text = (x, y, value, size = 22) => `<text x="${x}" y="${y}" font-size="${size}" fill="#17283f">${value}</text>`;
+        const box = (x, y, width, height, fill = "#dcecfb") => `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${fill}" stroke="#344b65" stroke-width="1.5"/>`;
+        const titles = [
+          ["Ein Meterstück", "Zehn gleich lange Stücke", "Jedes Stück noch einmal teilen", "Jetzt mehrere Meterstücke"],
+          ["Ein Quadrat auf dem Boden", "Eine Reihe mit zehn Fliesen", "Zehn Reihen bedecken den Boden", "Jetzt mehrere Bodenquadrate"],
+          ["Eine würfelförmige Kiste", "Den Boden mit Würfeln auslegen", "Zehn Schichten füllen die Kiste", "Jetzt mehrere Kisten"]
+        ];
+        let svg = "", caption, steps, height = 285;
+        if (dimension === 0) {
+          steps = [
+            "Stell dir ein 1 m langes Band vor. Wir schneiden nichts ab: Die Länge bleibt immer gleich.",
+            "Teile das Band in 10 gleich lange Stücke. Jedes Stück ist 10 cm lang. Zusammen sind das 10 · 10 cm = 100 cm.",
+            "Teile jedes 10-cm-Stück in 10 kleine Abschnitte. Jeder kleine Abschnitt ist 1 cm lang. Im ganzen Meter zählst du 100 Zentimeter.",
+            `Jedes Meterstück hat 100 cm. Bei ${amount} Meterstück${amount === 1 ? "" : "en"}: ${Array.from({length:amount}, () => "100").join(" + ")} = ${format(amount * 100)} cm. Also ${amount} m = ${format(amount * 100)} cm.`
+          ];
+          const rows = step === 3 ? amount : 1;
+          height = 80 + rows * 82;
+          for (let row = 0; row < rows; row += 1) {
+            const y = 40 + row * 82;
+            svg += box(30, y, 500, 36);
+            if (step >= 1) {
+              for (let part = 0; part < 10; part += 1) {
+                svg += box(30 + part * 50, y, 50, 36, part % 2 ? "#e1f1e8" : "#dcecfb");
+                if (step === 1 || step === 3) svg += text(33 + part * 50, y + 24, "10", 18);
+              }
+            }
+            if (step === 2) for (let cm = 1; cm < 100; cm += 1) svg += `<path d="M${30 + cm * 5} ${y + (cm % 10 ? 18 : 0)}v${cm % 10 ? 18 : 36}" stroke="#344b65"/>`;
+            svg += text(30, y + 62, step === 0 ? "1 m lang" : step === 2 ? "100 kleine Abschnitte · jeder ist 1 cm lang" : `Meterstück ${row + 1}: 100 cm`, 20);
+          }
+          caption = step === 0 ? "Das Band ist 1 Meter lang. Schiebe den Bildregler einen Schritt weiter: Wir teilen genau dieses Band ein."
+            : step === 1 ? "Die Zahlen im Band stehen für Zentimeter. Zähle die zehn Felder: Jedes ist 10 cm lang."
+            : step === 2 ? "Zwischen zwei kurzen Strichen liegt 1 cm. Zehn solcher Abschnitte ergeben ein großes Feld. Zehn große Felder ergeben 1 m."
+            : "Jeder gleich lange Streifen ist ein ganzes Meterstück. Zähle 100 cm für jeden Streifen dazu. Das Bild ist verkleinert, kein Bildschirm-Lineal.";
+        } else {
+          const isVolume = dimension === 2;
+          steps = isVolume ? [
+            "Die Kiste ist innen 1 m lang, 1 m breit und 1 m hoch. Ihr Rauminhalt heißt 1 Kubikmeter, kurz 1 m³. Wir füllen sie mit kleinen Würfeln.",
+            "Jeder kleine Würfel ist 10 cm lang, breit und hoch. Zehn passen nebeneinander, und zehn Reihen passen auf den Boden: 10 · 10 = 100 Würfel in einer Schicht.",
+            "Eine Schicht ist 10 cm hoch. Zehn Schichten passen bis zur Höhe von 1 m. Jede enthält 100 Würfel: 10 · 100 = 1 000 kleine Würfel.",
+            `Ein kleiner Würfel mit 10 cm Kantenlänge hat 1 dm³ Rauminhalt. In jede große Kiste passen 1 000 davon. ${amount} m³ = ${format(amount * 1000)} dm³.`
+          ] : [
+            "Das Bodenquadrat ist 1 m lang und 1 m breit. Seine Fläche heißt 1 Quadratmeter, kurz 1 m². Wir bedecken es mit kleinen quadratischen Fliesen.",
+            "Jede Fliese ist 10 cm lang und 10 cm breit. Zehn Fliesen passen nebeneinander. Das ist erst EINE Reihe: Der größte Teil des Bodens ist noch frei.",
+            "Zehn solcher Reihen bedecken den Boden vollständig. Jede Reihe hat zehn Fliesen. Zähle: 10 Reihen · 10 Fliesen = 100 Fliesen.",
+            `Eine Fliese von 10 cm mal 10 cm hat 1 dm² Fläche. Für jedes Bodenquadrat brauchst du 100 Fliesen. ${amount} m² = ${format(amount * 100)} dm².`
+          ];
+          const grid = (x, y, size, rows) => {
+            let markup = box(x, y, size, size, "#fff");
+            for (let row = 0; row < rows; row += 1) for (let col = 0; col < 10; col += 1) {
+              markup += box(x + col * size / 10, y + row * size / 10, size / 10, size / 10, row % 2 ? "#e1f1e8" : "#dcecfb");
+            }
+            return markup;
+          };
+          if (step === 0) {
+            svg = box(135, 60, 190, 190) + text(190, 40, "1 m") + text(65, 165, "1 m");
+            if (isVolume) svg += `<path d="M135 60l65 -35h190v190l-65 35M325 60l65 -35M325 60v190" fill="none" stroke="#344b65" stroke-width="2"/>` + text(400, 145, "1 m");
+            caption = isVolume ? "Die Kiste ist als Schrägbild gezeichnet. Ihre drei Kanten sind jeweils 1 m lang. Der Bildregler zeigt als Nächstes eine herausgenommene Bodenschicht."
+              : "Das Bild zeigt den Boden von oben. Beide Seiten sind 1 m lang. Als Nächstes legen wir eine Reihe kleiner Fliesen hinein.";
+          } else if (step < 3) {
+            svg = grid(100, 40, 200, isVolume || step === 2 ? 10 : 1) + text(100, 25, "10 Stück nebeneinander", 20);
+            if (isVolume && step === 2) {
+              for (let layer = 0; layer < 10; layer += 1) svg += box(365, 40 + layer * 20, 150, 20, layer % 2 ? "#e1f1e8" : "#dcecfb");
+              svg += text(360, 270, "10 Schichten", 20);
+            } else {
+              svg += text(325, 100, isVolume ? "Eine Schicht" : step === 1 ? "1 Reihe" : "10 Reihen", 21);
+              svg += text(325, 140, isVolume ? "100 Würfel" : step === 1 ? "10 Fliesen" : "100 Fliesen", 21);
+            }
+            caption = isVolume ? step === 1 ? "Links siehst du eine Schicht von oben. Jedes Kästchen ist die Oberseite eines kleinen Würfels. Die Kiste ist damit erst 10 cm hoch gefüllt."
+              : "Links: eine Schicht von oben, mit 100 Würfeln. Rechts: zehn solche Schichten übereinander, als Seitenansicht. Jetzt ist die ganze Kiste gefüllt."
+              : step === 1 ? "Nur die oberste Reihe ist gefliest. Jedes blaue Kästchen ist eine Fliese. Der weiße Rest ist noch unbedeckt."
+              : "Jedes Kästchen ist eine Fliese. Zehn Fliesen pro Reihe und zehn Reihen ergeben 100 Fliesen. Die ganze Fläche ist bedeckt.";
+          } else {
+            height = 80 + amount * 90;
+            for (let i = 0; i < amount; i += 1) {
+              const y = 25 + i * 90;
+              svg += grid(30, y, 65, 10) + text(120, y + 28, `${i + 1}. ${isVolume ? "Kiste" : "Bodenquadrat"}`, 22)
+                + text(120, y + 57, isVolume ? "1 000 kleine Würfel" : "100 kleine Fliesen", 22);
+              if (isVolume) svg += `<path d="M30 ${y}l12 -10h65v65l-12 10M95 ${y}l12 -10" fill="none" stroke="#344b65"/>`;
+            }
+            caption = isVolume ? "Jede Kiste enthält zehn Schichten mit je 100 kleinen Würfeln. Für mehrere Kisten zählst du jeweils 1 000 Würfel dazu."
+              : "Jedes große Bodenquadrat enthält 100 kleine Fliesen. Für mehrere Bodenquadrate zählst du jeweils 100 Fliesen dazu.";
+          }
+        }
+        const extension = step === 3 && dimension > 0 ? dimension === 1
+          ? `Eine 10-cm-Fliese lässt sich noch kleiner einteilen: 10 Reihen mit je 10 Quadraten von 1 cm Seitenlänge. Das sind 100 cm² pro Fliese. In 1 m² liegen 100 Fliesen, also 100 · 100 = 10 000 cm². Für ${amount} m² sind es ${format(amount * 10000)} cm².`
+          : `Auch einen kleinen 10-cm-Würfel kannst du mit 1-cm-Würfeln füllen: 100 pro Schicht und 10 Schichten, also 1 000 cm³. In 1 m³ liegen 1 000 der 10-cm-Würfel. Deshalb: 1 000 · 1 000 = 1 000 000 cm³. Für ${amount} m³ sind es ${format(amount * 1000000)} cm³.`
+          : "";
+        return { svg, caption, steps, height, extension, title: titles[dimension][step] };
       }
 
       function experimentModel(kind, [a, b, c]) {
@@ -2675,13 +2796,7 @@
               "Ein Messwert enthält immer Zahl und Einheit. Kleine Messfehler sind normal; nenne ein sinnvolles Maß.");
           }
           case "units": {
-            const dimension = b + 1, factor = 100 ** dimension;
-            const unit = ["m", "m²", "m³"][b], target = ["cm", "cm²", "cm³"][b];
-            return model(b === 0 ? line(40, 100, 430, 100, "#1456a0", 5) + text(40, 150, "100 cm", 24) : b === 1 ? rect(60, 35, 180, 180) + text(255, 125, "100 × 100", 24) : rect(80, 75, 140, 120) + line(80, 75, 125, 35) + line(220, 75, 265, 35) + line(125, 35, 265, 35) + line(265, 35, 265, 155) + line(220, 195, 265, 155) + text(285, 125, "100 × 100 × 100", 18),
-              `${dimension} Messrichtung${dimension === 1 ? "" : "en"}: bei jeder wird Meter in Zentimeter umgerechnet.`,
-              `1 ${unit} = ${f(factor)} ${target}. Der Faktor ist ${Array(dimension).fill(100).join(" · ")}.`,
-              `${a} ${unit} = ${f(a * factor)} ${target}.`,
-              "Weitere wichtige Umrechnungen: 1 kg = 1 000 g; 1 l = 1 000 ml = 1 dm³; 1 € = 100 ct; 1 h = 60 min; 1 ha = 10 000 m².");
+            return unitLearningModel(a, b, c ?? 0);
           }
           case "time": {
             const start = 9 * 60 + a, finish = start + b;
@@ -2857,7 +2972,7 @@
           ["brueche", "Brüche", "Ein Ganzes, gleiche Stücke: Verändere deinen Bruch.", "Deinen Bruch färben"],
           ["dezimalzahlen", "Dezimalzahlen", "Zähle die gefärbten Zehntel und lies die Dezimalzahl.", "Zehntel zählen"],
           ["negative-zahlen", "Negative Zahlen", "Starte auf dem Zahlenstrahl und gehe nach links oder rechts.", "Auf dem Zahlenstrahl gehen"],
-          ["groessen", "Größen und Einheiten", "Vergleiche Länge, Fläche und Volumen: Wie oft wird umgerechnet?", "Einheiten sichtbar umrechnen"],
+          ["groessen", "Größen und Einheiten", "Zähle kleine Stücke in einem Meterstück, einem Bodenquadrat oder einer Kiste.", "Gleiche Größe – kleinere Stücke zählen"],
           ["prozent", "Prozent und Zuordnungen", "Wie viel ist ein Anteil vom Ganzen?", "Prozentanteile verändern"],
           ["terme", "Terme und Gleichungen", "Finde die Zahl x, bei der beide Seiten gleich viel wert sind.", "Die Waage ausgleichen"],
           ["geometrie", "Geometrie", "Drehe einen Schenkel und beobachte die Winkelgröße.", "Einen Winkel drehen"],
@@ -3056,7 +3171,7 @@
           fraction: "Wähle alle Stücke (Nenner), dann die blauen Stücke (Zähler).",
           decimal: "Färbe Zehntel mit dem Regler. Zehn Kästchen bilden ein Ganzes.",
           negative: "Wähle den Start. Plus geht nach rechts, Minus nach links.",
-          units: "Wähle Länge, Fläche oder Volumen. Vergleiche die Richtungen und den Faktor.",
+          units: "Wie viele kleine Stücke passen hinein? Beginne mit einer Strecke. Schiebe das Bild Schritt für Schritt weiter.",
           percent: "Ändere den Prozentsatz. Verändere dann die Grundmenge.",
           equation: "Ändere x. Finde die Stellung, in der die Waage gerade steht.",
           geometry: "Ziehe den Regler. Bei 90° steht der blaue Schenkel senkrecht.",
@@ -3073,7 +3188,7 @@
           "round-number": "Deine Zahl", "factor-a": "Erster Faktor", "factor-b": "Zweiter Faktor",
           "fraction-numerator": "Blaue Stücke (Zähler)", "fraction-denominator": "Alle Stücke (Nenner)",
           "decimal-tenths": "Gefärbte Zehntel", "negative-start": "Startzahl",
-          "negative-move": "Schritte: + rechts, − links", "unit-amount": "Anzahl der Einheiten",
+          "negative-move": "Schritte: + rechts, − links", "unit-amount": "Wie viele Meterstücke?", "unit-step": "Bild Schritt für Schritt",
           "percent-rate": "Prozentsatz", "percent-base": "Grundmenge",
           "equation-x": "Wert von x", "angle-size": "Winkelgröße",
           "rectangle-length": "Länge", "rectangle-width": "Breite",

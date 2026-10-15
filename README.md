@@ -12,6 +12,7 @@ Interaktive Lernseite für die Realschule in Baden-Württemberg mit 14 Themenkap
 - Zweiter Schieberegler für Hilfen in kleinen Schritten; alternativ über große Schaltflächen und Tastatur bedienbar
 - Bilderhilfe bei jeder Aufgabe; passende mathematische Modelle oder Denkpläne mit Schrittkarten, ohne automatisch die Musterlösung einzublenden
 - Große Kuchendarstellungen und platzsparendes Layout für Smartphones und Tablets
+- Einheiten ohne vorausgesetzte Umrechnungsregeln entdecken: Meterband einteilen, einen Boden Reihe für Reihe fliesen und eine Kiste Schicht für Schicht mit Würfeln füllen. Vier Bildschritte führen vom einzelnen großen Stück zum Zählen kleiner Stücke; weitere Meterstücke, Bodenquadrate und Kisten kommen erst im letzten Schritt hinzu.
 - Korrigierte Winkelzeichnung für 0–180°, vollständiger Zahlenstrahl von −16 bis 16 und gemeinsam bewegte Waagschalen
 - Aufgaben einzeln bearbeiten; Leicht, Mittel und Knifflig gezielt auswählen
 - Antworten eintippen: richtige Lösungen werden grün und mit Rechenweg erklärt
