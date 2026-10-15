@@ -23,6 +23,46 @@
     }
 
     * { box-sizing: border-box; }
+    .mini-lab { margin: 1rem 0; padding: 1rem; border: 2px solid #a9c9e5; border-radius: 12px; background: #f6faff; }
+    .mini-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .8rem; }
+    .mini-controls label { display: grid; gap: .2rem; }
+    .mini-controls input, .mini-controls select { width: 100%; min-width: 0; }
+    .mini-controls input[type="range"] { accent-color: #1456a0; }
+    .mini-figure svg { display: block; width: 100%; max-width: 520px; height: auto; margin: .8rem auto; }
+    .mini-result { padding: .7rem; border-left: 4px solid #1456a0; background: #e9f2fc; }
+    .mini-result li { margin: .5rem 0; }
+    .mini-challenge { border-left: 4px solid #18774c; padding: .7rem; background: #eaf6ef; }
+    .hands-on { padding: .8rem; border: 1px dashed #6a8097; border-radius: 8px; background: #fff9ea; }
+    .coverage-note { margin: 1rem 0; padding: .8rem; border: 1px solid #cda64e; border-radius: 8px; background: #fff8e5; }
+    .lesson-card[open] { border: 2px solid #9bb9d8; }
+    input:focus-visible, select:focus-visible { outline: 3px solid #f0aa24; outline-offset: 2px; }
+    .mini-figure { min-width: 0; }
+    .visual-coach { margin: 1rem 0; padding: clamp(.65rem, 2vw, 1rem); border: 2px solid #a9c9e5; border-radius: 12px; background: #fff; min-width: 0; }
+    .visual-coach > h4 { margin: 0 0 .4rem; font-size: 1.12rem; }
+    .coach-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 1rem; }
+    .coach-controls label { display: grid; gap: .3rem; font-weight: 650; }
+    .coach-controls input[type="range"] { width: 100%; min-width: 0; min-height: 44px; accent-color: #1456a0; cursor: pointer; }
+    .coach-controls input[type="range"]::-webkit-slider-thumb { width: 24px; height: 24px; }
+    .coach-controls output { font-size: .95rem; color: #1456a0; font-weight: 600; }
+    .coach-buttons { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0; }
+    .coach-buttons button { min-height: 44px; padding: .4rem .7rem; }
+    .coach-picture { min-width: 0; overflow-wrap: anywhere; }
+    .coach-picture svg, .question-visual .coach-picture svg { display: block; width: 100%; max-width: 700px; height: auto; margin: .7rem auto; }
+    .coach-caption { font-size: .95rem; padding: .6rem; border-left: 4px solid #1456a0; background: #eaf2fc; }
+    .coach-steps { padding: .7rem 1rem .7rem 2rem; background: #eaf6ef; border-radius: 8px; }
+    .coach-steps li { margin: .4rem 0; }
+    .coach-steps li:last-child { font-weight: 650; }
+    .coach-flow { display: grid; gap: .6rem; padding: .5rem 0; }
+    .coach-tile { border: 2px solid #a9c9e5; border-radius: 10px; padding: .8rem; background: #f6faff; }
+    .coach-tile strong { display: block; color: #1456a0; }
+    .coach-tile.is-current { border-color: #25834f; background: #eaf6ef; }
+    .coach-legend { margin: .5rem 0; font-size: .94rem; }
+    .fraction-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: .75rem; }
+    .fraction-gallery figure { margin: 0; padding: .4rem; border: 1px solid #c3d4e5; border-radius: 10px; text-align: center; }
+    .coach-picture .fraction-gallery svg { max-width: 240px; }
+    .fraction-gallery figcaption { font-size: 1rem; }
+    @media print { .coach-controls, .coach-buttons { display: none; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
     html { scroll-behavior: smooth; scroll-padding-top: 1rem; }
     body {
       margin: 0;
@@ -225,6 +265,12 @@
       .hero { padding-top: 2.5rem; padding-bottom: 2.5rem; }
       .layout { width: min(100% - 1rem, 1100px); margin-top: .5rem; }
       .intro, .chapter, .toc { border-radius: 11px; }
+      .chapter { padding: .7rem; }
+      .learning-panel { padding: .45rem; }
+      .lesson-card { padding: .55rem; }
+      .mini-lab { padding: .45rem; border-width: 1px; }
+      .visual-coach { padding: .5rem; border-width: 1px; }
+      .question-visual { padding: .35rem; }
     }
     @media print {
       .course-nav, .learning-steps, .step-next { display: none; }
@@ -996,7 +1042,16 @@
       }
 
       function rational(value) {
-        const cleaned = value.trim().replace(/\s+/g, "").replace(/[−–]/g, "-").replace(",", ".");
+        const normalized = value.trim().replace(/[−–]/g, "-").replace(",", ".");
+        const mixed = normalized.match(/^([+-]?)(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+        if (mixed) {
+          const whole = BigInt(mixed[2]), part = BigInt(mixed[3]), denominator = BigInt(mixed[4]);
+          if (denominator === 0n || part >= denominator) return null;
+          const numerator = (whole * denominator + part) * (mixed[1] === "-" ? -1n : 1n);
+          const divisor = gcd(numerator, denominator);
+          return [numerator / divisor, denominator / divisor];
+        }
+        const cleaned = normalized.replace(/\s+/g, "");
         const fraction = cleaned.match(/^([+-]?\d+)\/([+-]?\d+)$/);
         if (fraction) {
           const numerator = BigInt(fraction[1]);
@@ -1026,6 +1081,18 @@
         return given !== null && answer !== null && given[0] === answer[0] && given[1] === answer[1];
       }
 
+      function isTaskCorrect(input, item) {
+        if (item.answerType === "text") return input.trim().toLocaleLowerCase("de-DE").replace(/\s+/g, "") === item.answer.toLocaleLowerCase("de-DE").replace(/\s+/g, "");
+        if (item.interval) {
+          const value = rational(input);
+          const lower = rational(String(item.interval[0]));
+          const upper = rational(String(item.interval[1]));
+          return value !== null && value[0] * lower[1] > lower[0] * value[1]
+            && value[0] * upper[1] < upper[0] * value[1];
+        }
+        return isCorrect(input, item.answer, item.requireReducedFraction);
+      }
+
       function renderQuestion(focusAnswer = true) {
         const item = sessionTasks[currentIndex];
         questionCard.hidden = false;
@@ -1049,10 +1116,17 @@
       }
 
       function addSolution(target, item) {
-        const explanation = document.createElement("p");
+        const explanation = document.createElement("div");
         const strong = document.createElement("strong");
-        strong.textContent = `Richtige Antwort: ${item.answer}. `;
-        explanation.append(strong, document.createTextNode(item.explanation));
+        strong.textContent = `${item.interval ? "Eine mögliche Antwort" : "Richtige Antwort"}: ${item.answer.replace(".", ",")}. `;
+        explanation.append(strong);
+        const steps = document.createElement("ol");
+        item.explanation.split(/(?:\n| → )/).forEach(text => {
+          const step = document.createElement("li");
+          step.textContent = text;
+          steps.append(step);
+        });
+        explanation.append(steps);
         target.append(explanation);
       }
 
@@ -1065,7 +1139,8 @@
       function startPractice(focusAnswer = true) {
         const topic = topicSelect.value;
         const level = document.getElementById("level-select")?.value || "alle";
-        sessionTasks = tasks.filter(item => (topic === "alle" || item.topic === topic) && (level === "alle" || item.level === level));
+        const includeExtra = document.getElementById("include-extra")?.checked || false;
+        sessionTasks = tasks.filter(item => (topic === "alle" || item.topic === topic) && (level === "alle" || item.level === level) && (includeExtra || !item.extra));
         currentIndex = 0;
         firstTryCorrect = 0;
         hadMistake = false;
@@ -1080,7 +1155,7 @@
 
       answerForm.addEventListener("submit", (event) => {
         event.preventDefault();
-        if (questionCard.hidden) return;
+        if (questionCard.hidden || answerInput.disabled) return;
         const item = sessionTasks[currentIndex];
         const answer = answerInput.value.trim();
         if (!answer) {
@@ -1090,7 +1165,7 @@
           return;
         }
         answerInput.removeAttribute("aria-invalid");
-        if (isCorrect(answer, item.answer, /kürze/i.test(item.question))) {
+        if (isTaskCorrect(answer, item)) {
           if (!hadMistake) firstTryCorrect += 1;
           setCardState("correct", "#e7f7ed", "#16824d");
           feedback.className = "feedback feedback-correct";
@@ -1467,6 +1542,7 @@
         updateDiscovery(lab);
       });
 
+      upgradeLearningContent();
       buildLearningCourse();
 
       if (tasks.some((item) => item.tips.length !== 3)) {
@@ -1482,29 +1558,1295 @@
           questionText.after(picture);
         }
         picture.replaceChildren();
-        const fraction = item.question.match(/(\d+)\/(\d+)/);
-        if (item.topic === "Brüche" && fraction && Number(fraction[1]) <= Number(fraction[2])) {
-          const numerator = Number(fraction[1]), denominator = Number(fraction[2]);
+        const fractions = item.question.match(/\d+\/\d+/g) || [];
+        for (const fraction of fractions) {
+          const [numerator, denominator] = fraction.split("/").map(Number);
+          if (denominator < 1 || denominator > 100 || numerator > 3 * denominator) continue;
+          const rows = Math.max(1, Math.ceil(numerator / denominator));
           const diagram = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-          diagram.setAttribute("viewBox", "0 0 360 90");
+          diagram.setAttribute("viewBox", `0 0 560 ${rows * 30 + 50}`);
           diagram.setAttribute("role", "img");
-          diagram.setAttribute("aria-label", `Der erste Bruch aus der Aufgabe: ${numerator}/${denominator}. ${numerator} von ${denominator} Teilen sind blau.`);
-          diagram.innerHTML = Array.from({length: denominator}, (_, index) => `<rect x="${15 + index * 330 / denominator}" y="12" width="${330 / denominator}" height="40" fill="${index < numerator ? "#2873b9" : "#e5edf6"}" stroke="#344b65"/>`).join("") +
-            `<text x="180" y="78" text-anchor="middle" font-size="16" fill="#17283f">Erster Bruch: ${numerator} von ${denominator} gleichen Teilen</text>`;
+          diagram.setAttribute("aria-label", `${numerator}/${denominator}: ${numerator} Teile sind blau. Jeder Streifen ist ein Ganzes mit ${denominator} Teilen.`);
+          diagram.innerHTML = Array.from({length: rows * denominator}, (_, index) => `<rect x="${30 + index % denominator * 480 / denominator}" y="${10 + Math.floor(index / denominator) * 30}" width="${480 / denominator}" height="24" fill="${index < numerator ? "#2873b9" : "#e5edf6"}" stroke="#344b65"/>`).join("") +
+            `<text x="280" y="${rows * 30 + 30}" text-anchor="middle" font-size="16" fill="#17283f">${fraction}: Jeder Streifen ist ein Ganzes.</text>`;
           picture.append(diagram);
-        } else {
+        }
+        if (!picture.children.length && (["circle", "cube", "compound", "body", "solid-types", "symmetry", "data", "statistics", "percent"].includes(item.kind) || item.kind === "pattern" && item.showPattern)) {
+          const scene = experimentModel(item.kind, item.values);
+          const diagram = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          diagram.setAttribute("viewBox", "0 0 560 250");
+          diagram.setAttribute("role", "img");
+          diagram.setAttribute("aria-label", `Skizze zur Aufgabe: ${item.question}`);
+          diagram.innerHTML = scene.svg;
+          if (item.kind === "cube") diagram.querySelectorAll("text").forEach(label => {
+            if (!label.textContent.startsWith("l=")) label.remove();
+          });
+          if (item.kind === "symmetry") {
+            diagram.querySelectorAll('circle[fill="#25834f"]').forEach(point => point.remove());
+            diagram.querySelectorAll("text").forEach(label => {
+              if (label.textContent.startsWith("P′")) label.remove();
+            });
+          }
+          picture.append(diagram);
+          const caption = document.createElement("p");
+          caption.textContent = "Skizze zur Aufgabe. Die Maße stehen im Text; miss nicht am Bildschirm.";
+          picture.append(caption);
+        }
+        const arithmetic = item.question.match(/(?:Berechne(?: schriftlich)?:?\s*)(\d+(?:,\d+)?)\s*([+−·:])\s*(\d+(?:,\d+)?)[.!]?$/);
+        if (!picture.children.length && arithmetic) {
+          const left = Number(arithmetic[1].replace(",", "."));
+          const right = Number(arithmetic[3].replace(",", "."));
+          const operator = arithmetic[2];
+          const diagram = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+          diagram.setAttribute("viewBox", "0 0 560 160");
+          diagram.setAttribute("role", "img");
+          let svg;
+          let description;
+          if (operator === "·" && Number.isInteger(left) && Number.isInteger(right) && left * right <= 160) {
+            const unit = Math.min(32, 470 / right, 110 / left);
+            svg = Array.from({length:left * right}, (_, i) => `<rect x="${40 + i % right * unit}" y="${15 + Math.floor(i / right) * unit}" width="${unit}" height="${unit}" fill="#dcecfb" stroke="#344b65"/>`).join("");
+            description = `${left} Reihen mit je ${right} Kästchen. Zähle oder zerlege die Reihen.`;
+          } else {
+            const words = operator === "+" ? ["Start", "kommt dazu"] : operator === "−" ? ["Start", "geht weg"] : operator === "·" ? ["Menge pro Gruppe", "Anzahl Gruppen"] : ["Gesamtmenge", "Menge pro Gruppe"];
+            svg = `<rect x="30" y="20" width="225" height="90" rx="8" fill="#dcecfb" stroke="#344b65"/><rect x="300" y="20" width="225" height="90" rx="8" fill="#e1f1e8" stroke="#344b65"/><text x="45" y="48" font-size="17">${words[0]}</text><text x="315" y="48" font-size="17">${words[1]}</text><text x="45" y="87" font-size="28">${arithmetic[1]}</text><text x="315" y="87" font-size="28">${arithmetic[3]}</text><text x="268" y="75" font-size="28">${operator}</text>`;
+            description = operator === ":" ? "Wie viele gleich große Gruppen passen in die Gesamtmenge?" : "Die beiden farbigen Felder zeigen, welche Rolle die Zahlen spielen.";
+          }
+          diagram.setAttribute("aria-label", description);
+          diagram.innerHTML = svg;
+          const caption = document.createElement("p");
+          caption.textContent = description;
+          picture.append(diagram, caption);
+        }
+        if (!picture.children.length) {
           const label = document.createElement("strong");
           label.textContent = `Deine Aufgabe · ${item.topic}`;
           picture.append(label);
         }
+        const original = [...picture.childNodes];
+        const alternatives = taskVisualModels(item);
+        const models = picture.querySelector("svg")
+          ? [{ name: "Aufgabenbild", draw: () => {
+              const content = document.createElement("div");
+              original.forEach(node => content.append(node.cloneNode(true)));
+              return content;
+            } }, ...alternatives]
+          : alternatives;
+        const coach = createVisualCoach("Deine Bilderhilfe", true);
+        coach.update(models, item.tips);
+        picture.replaceChildren(coach.element);
         answerInput.removeAttribute("aria-invalid");
-        document.getElementById("answer-format").textContent = /kürze/i.test(item.question)
+        document.getElementById("answer-format").textContent = item.answerType === "text"
+          ? "Tippe das gefragte Wort oder die gefragten Zeichen ohne Zusatz ein."
+          : item.requireReducedFraction
           ? "Tippe einen vollständig gekürzten Bruch mit / ein, zum Beispiel 3/4."
           : item.answer.includes("/")
           ? "Tippe den Bruch mit / ein, zum Beispiel 3/4. Gleichwertige Brüche zählen auch."
           : item.question.includes("1 für Ja")
             ? "Tippe 1 für Ja oder 0 für Nein."
             : "Tippe eine Zahl ein. Komma oder Punkt sind erlaubt. Die Einheit steht in der Aufgabe.";
+      }
+
+      function upgradeLearningContent() {
+        const lessons = {
+          zahlen: [
+            ["Stellenwert: Warum ist eine 2 nicht immer zwei?", "place", "Eine Ziffer hat je nach Platz einen anderen Wert. In 324 bedeutet die 3 drei Hunderter, die 2 zwei Zehner und die 4 vier Einer. Die 0 hält einen Platz frei.", "Zehn Einer lassen sich zu einem Zehner bündeln; zehn Zehner zu einem Hunderter. Deshalb ist jede Stelle links zehnmal so viel wert.", "Stelle die Zehner auf 0. Warum darf die 0 in der Zahl nicht fehlen?"],
+            ["Große Zahlen und römische Zahlen", "roman", "Unser Zahlensystem benutzt Stellenwerte. Bei römischen Zahlen stehen I für 1, V für 5 und X für 10. Größere Zahlen entstehen durch Zusammenstellen dieser Zeichen.", "Normalerweise addierst du. Steht I vor V oder X, wird die 1 abgezogen: IV = 4 und IX = 9. Römische Ziffern haben keinen Stellenwert wie unsere Ziffern.", "Vergleiche 14 und 41 in unserem System. Schau dann auf XIV und XLI: Warum braucht das römische System andere Zeichen?"],
+            ["Runden: Welche Angabe ist sinnvoll?", "round", "Runden bedeutet: Eine Zahl durch einen nahen, einfacheren Wert ersetzen. Bei Entfernungen reicht manchmal ein ungefährer Wert; bei einer Rechnung an der Kasse nicht.", "Beim Runden auf Hunderter suchst du die beiden benachbarten Hunderter. Der nähere wird gewählt; genau in der Mitte rundest du auf.", "Finde zwei verschiedene Zahlen, die zu 1 300 gerundet werden. Bedeutet die Angabe 1 300 also immer exakt dieselbe ursprüngliche Zahl?"],
+            ["Zwischen zwei Zahlen ist noch Platz", "density", "Auf der Zahlengeraden gibt es zwischen 0,4 und 0,5 noch viele Zahlen, etwa 0,45. Das gilt auch zwischen Bruchzahlen.", "Der Mittelwert zweier verschiedener Zahlen liegt genau dazwischen. Du kannst das mit einem neuen Zwischenwert immer wieder machen.", "Finde eine Zahl zwischen 0,4 und 0,45. Dann eine zwischen 0,4 und deiner neuen Zahl."]
+          ],
+          grundrechenarten: [
+            ["Addition und Subtraktion: Stellen passend ordnen", "addsub", "Beim Addieren kommen Dinge dazu, beim Subtrahieren gehen sie weg. Schreibe Einer unter Einer, Zehner unter Zehner. Bei Dezimalzahlen stehen die Kommas untereinander.", "10 Einer bilden einen Zehner. Ein Übertrag tauscht also keine Menge weg, sondern bündelt sie nur neu. Beim Abziehen kannst du umgekehrt einen Zehner in 10 Einer tauschen.", "Wähle 28 + 17. Bei welchem Stellenwert brauchst du einen Übertrag? Kontrolliere die Summe durch Subtrahieren."],
+            ["Multiplikation: Reihen zählen und zerlegen", "multiply", "4 · 6 bedeutet vier gleich große Gruppen mit je sechs Dingen. Du kannst das als vier Reihen mit je sechs Kästchen sehen.", "Zerlege 24 · 3 in 20 · 3 und 4 · 3. Du zählst dieselben Kästchen in zwei Teilflächen. Das ist das Verteilungsgesetz.", "Verdopple einen Faktor. Was passiert mit den Kästchen? Tausche anschließend die Faktoren: Ändert sich das Ergebnis?"],
+            ["Division: gleich verteilen und den Rest prüfen", "divide", "Bei 17 : 4 fragst du, wie viele Vierergruppen in 17 passen. Vier Gruppen brauchen 16; ein Ding bleibt übrig. Also: 4 Rest 1.", "Bei der schriftlichen Division arbeitest du Stelle für Stelle. Nach jedem Teilen folgen Multiplizieren und Abziehen. Der Rest muss kleiner als der Divisor sein.", "Suche eine Division mit Rest 0 und eine mit Rest 2. Prüfe immer: Divisor · Quotient + Rest = Dividend."],
+            ["Potenzen und Quadratzahlen", "power", "3⁴ ist die Kurzschreibweise für 3 · 3 · 3 · 3. Die 3 heißt Basis; die 4 heißt Exponent und zählt die Faktoren.", "Eine Quadratzahl a² lässt sich als Quadrat mit a Reihen und a Spalten darstellen. Lerne die Quadratzahlen von 1² bis 15².", "Vergleiche 3⁴ und 3 · 4. Warum ist der Exponent kein gewöhnlicher Faktor?"],
+            ["Klammern und Punkt vor Strich", "order", "Eine Rechenaufgabe ist wie eine Anleitung. Klammern geben den ersten Schritt vor. Danach kommen Potenzen, dann Mal/Geteilt, dann Plus/Minus.", "Ohne diese Reihenfolge hätte dieselbe Aufgabe mehrere Ergebnisse. Auf derselben Rangstufe wird von links nach rechts gerechnet.", "Vergleiche 4 + 3 · 2 und (4 + 3) · 2. Ändere die Zahlen und erkläre, warum die Ergebnisse verschieden sind."]
+          ],
+          teilbarkeit: [
+            ["Teilbarkeit und Quersumme", "divisibility", "Teilbar bedeutet: Bei der Division bleibt kein Rest. Für 2, 5 und 10 genügt die letzte Ziffer. Für 3 und 9 hilft die Quersumme – die Summe aller Ziffern.", "Prüfe: gerade Endziffer → durch 2; 0 oder 5 → durch 5; 0 → durch 10. Ist die Quersumme durch 3 oder 9 teilbar, gilt das auch für die ganze Zahl.", "Finde eine Zahl, die durch 3, aber nicht durch 9 teilbar ist."],
+            ["Primzahlen und Primfaktoren", "factors", "Eine Primzahl hat genau zwei positive Teiler: 1 und sich selbst. 1 ist keine Primzahl. Bei einer Primfaktorzerlegung schreibst du eine Zahl als Produkt von Primzahlen.", "Teile die Zahl wiederholt durch passende Primzahlen wie 2, 3, 5 oder 7. Die Multiplikation deiner gefundenen Faktoren muss wieder die Startzahl ergeben.", "Zerlege 24 und 30. Welche Primfaktoren kommen in beiden Zahlen vor?"],
+            ["Gemeinsame Teiler und Vielfache", "common", "Teiler teilen eine Zahl ohne Rest. Vielfache entstehen beim Multiplizieren. Der größte gemeinsame Teiler hilft beim Kürzen; ein gemeinsames Vielfaches beim Finden eines gemeinsamen Nenners.", "Schreibe die Teiler oder Vielfachen beider Zahlen auf. Suche gemeinsame Werte. Beim kgV zählt das kleinste positive gemeinsame Vielfache.", "Vergleiche 8 und 12. Nutze die gemeinsamen Werte, um Brüche mit diesen Nennern auf denselben Nenner zu bringen."]
+          ],
+          brueche: [
+            ["Brüche sind gleich große Teile – auch mehr als ein Ganzes", "fraction", "Der Nenner sagt, in wie viele gleich große Stücke EIN Ganzes geteilt ist. Der Zähler zählt die genommenen Stücke. 7/4 sind sieben Viertel, also mehr als ein Ganzes.", "Der Bruchstrich bedeutet auch Division: 7/4 = 7 : 4. Vier Viertel ergeben ein Ganzes. Der Rest sind drei Viertel: 1 3/4.", "Stelle den Zähler größer als den Nenner. Wie viele ganze Kuchen kannst du zusammensetzen?"],
+            ["Brüche von Mengen und Rechnen mit natürlichen Zahlen", "fraction-operator", "3/4 von 20 bedeutet: Teile die 20 Dinge in vier gleich große Gruppen und nimm drei davon. So benutzt du einen Bruch als Rechenanweisung.", "Ein Viertel von 20 ist 20 : 4 = 5. Drei Viertel sind 3 · 5 = 15. Beim Multiplizieren eines Bruchs mit einer natürlichen Zahl wird der Zähler multipliziert; beim Teilen wird der Nenner multipliziert: 3/4 : 2 = 3/8.", "Nimm erst eine Gruppe, dann drei Gruppen. Verdopple die Gesamtmenge: Was geschieht mit der ausgewählten Anzahl?"],
+            ["Erweitern und Kürzen: gleicher Anteil, andere Stücke", "expand", "Beim Erweitern unterteilst du jedes Stück noch einmal. Deshalb musst du Zähler UND Nenner mit derselben Zahl multiplizieren. Beim Kürzen fasst du kleine Stücke zusammen.", "Der Anteil bleibt gleich: 1/2 = 2/4 = 3/6. Du veränderst die Anzahl und Größe der Stücke gemeinsam, nicht die ausgewählte Menge.", "Verdopple Zähler und Nenner. Prüfe im Bild: Bleibt die blaue Fläche gleich groß?"],
+            ["Brüche vergleichen und auf der Zahlengeraden finden", "compare", "Vergleiche immer Anteile desselben Ganzen. Bei gleichem Nenner sind die Stücke gleich groß. Dann entscheidet der Zähler. Bei verschiedenen Nennern helfen Bruchstreifen gleicher Länge.", "1/2 und 2/3 werden als 3/6 und 4/6 geschrieben. Vier Sechstel sind mehr als drei Sechstel. Je weiter rechts eine Zahl auf der Zahlengeraden liegt, desto größer ist sie.", "Finde zwei verschiedene Brüche, die gleich groß sind. Finde danach einen Bruch dazwischen."],
+            ["Brüche addieren und subtrahieren", "fraction-sum", "Du kannst Drittel und Viertel nicht einfach zusammenzählen: Die Stücke sind verschieden groß. Mache daraus gleich große Stücke, zum Beispiel Zwölftel.", "Für 1/3 + 1/4 gilt: 1/3 = 4/12 und 1/4 = 3/12. Nun addierst du 4 + 3; die Stückgröße, also der Nenner, bleibt 12.", "Vergleiche 1/3 + 1/4 mit 2/7. Warum beschreibt 2/7 nicht dieselbe Menge?"],
+            ["Brüche multiplizieren: ein Teil von einem Teil", "fraction-product", "Die Hälfte von drei Vierteln heißt 1/2 · 3/4. Erst nimmst du drei Viertel, danach davon die Hälfte.", "Im Rechteck färbst du einen Anteil waagerecht und den anderen senkrecht. Die überlappende Fläche ist das Produkt. So entstehen Zähler mal Zähler und Nenner mal Nenner.", "Halbiere einen Anteil. Wird das Produkt größer oder kleiner? Multipliziere danach denselben Anteil mit 2."],
+            ["Brüche dividieren: Wie oft passt das Stück hinein?", "fraction-division", "1/2 : 1/4 fragt: Wie viele Viertel passen in eine Hälfte? Im Streifen sind es zwei. Deshalb ist das Ergebnis 2.", "Allgemein ersetzt du Teilen durch einen Bruch durch Malnehmen mit seinem Kehrwert. Bei 2/3 : 1/6 wird daraus 2/3 · 6 = 4.", "Teile ein Halb durch ein Achtel. Zähle zuerst im Streifen und rechne dann mit dem Kehrwert."]
+          ],
+          dezimalzahlen: [
+            ["Zehntel und Hundertstel: das Komma verstehen", "decimal", "0,7 bedeutet sieben Zehntel; 0,07 bedeutet sieben Hundertstel. Hundertstel sind zehnmal kleiner als Zehntel.", "Hinter einer Dezimalzahl angehängte Nullen ändern den Wert nicht: 0,7 = 0,70. Sie helfen, Stellen untereinander zu vergleichen.", "Stelle 70 Hundertstel und danach 7 Hundertstel ein. Wie unterscheiden sich die gefärbten Flächen?"],
+            ["Dezimalzahlen multiplizieren und dividieren", "decimal-operation", "Bei 1,2 · 0,3 rechnest du erst 12 · 3 = 36. Weil Zehntel mal Zehntel Hundertstel sind, ist das Ergebnis 0,36.", "Bei 4,2 : 0,6 kannst du beide Zahlen mit 10 multiplizieren: 42 : 6 = 7. Du änderst dabei den Quotienten nicht, denn beide Mengen werden gleich stark vergrößert.", "Wechsle zwischen Mal und Geteilt. Begründe die Kommastelle mit Zehnteln und Hundertsteln, nicht nur mit einer Merkregel."],
+            ["Abbrechende und periodische Dezimalzahlen", "periodic", "Manche Divisionen enden: 1 : 4 = 0,25. Andere wiederholen sich: 1 : 3 = 0,333… Die sich wiederholenden Ziffern heißen Periode.", "Bei der schriftlichen Division führt derselbe Rest wieder zu derselben nächsten Ziffer. Wenn der Rest wiederkehrt, beginnt die Periode. 0,33 ist nur eine Näherung für 1/3.", "Vergleiche die Divisionen durch 4 und durch 3. Warum darf man bei 1/3 nicht einfach nach zwei Stellen behaupten, die Rechnung sei fertig?"]
+          ],
+          "negative-zahlen": [
+            ["Negative Zahlen: Temperatur und Veränderung", "negative", "Negative Zahlen liegen links von 0. −2 °C ist wärmer als −5 °C. Eine Änderung von +3 °C bedeutet drei Schritte nach rechts; −3 °C drei Schritte nach links.", "Starttemperatur + Änderung = neue Temperatur. Das Minuszeichen gehört zur Zahl; es ist nicht immer das Zeichen für eine Subtraktion.", "Starte bei −5 °C und erhöhe um 3 °C. Bleibt die Temperatur negativ?"],
+            ["Gegenzahlen und Abstände", "distance", "3 und −3 sind Gegenzahlen. Beide haben den Abstand 3 von der Null. Dennoch sind sie nicht dieselbe Zahl.", "Der Abstand ist eine Länge und deshalb nicht negativ. Von −3 bis +4 gehst du 3 Schritte bis 0 und weitere 4 Schritte: zusammen 7.", "Finde zwei Zahlen mit gleichem Abstand zu 0. Finde danach die Entfernung zwischen ihnen."]
+          ],
+          groessen: [
+            ["Messen und Schätzen: Zahlwert und Einheit gehören zusammen", "measure", "Eine Messung vergleicht eine Größe mit einer Einheit. Bei 3 cm passt eine Zentimeter-Einheit dreimal in die Länge. Ohne Einheit ist eine Größenangabe unvollständig.", "Eine Schätzhilfe ist ein Gegenstand, dessen ungefähre Größe du kennst: ein Türblatt etwa 2 m hoch, eine Wasserflasche 1 l. Solche Vergleiche helfen, unplausible Ergebnisse zu erkennen.", "Schätze die Länge deines Hefts, miss dann mit dem Lineal und vergleiche. Wie groß war deine Abweichung?", "Miss ein Heft und eine Tür. Lies am Lineal vom Nullstrich aus, nicht vom Rand. Notiere Schätzung, Messwert und Einheit."],
+            ["Einheiten umrechnen – auch Fläche und Volumen", "units", "Bei kleineren Einheiten brauchst du mehr Einheiten für dieselbe Größe. 1 m und 100 cm beschreiben dieselbe Länge. centi bedeutet Hundertstel, milli Tausendstel, dezi Zehntel, kilo Tausend und Mega eine Million.", "Bei Fläche rechnest du in zwei Richtungen: 1 m² = 100 cm · 100 cm. Bei Volumen in drei Richtungen. Zeit rechnet anders: 1 h = 60 min, nicht 100 min.", "Wechsle Länge, Fläche und Volumen. Erkläre, warum der Faktor nicht immer 100 ist."],
+            ["Mit Größen rechnen: Einheiten zuerst angleichen", "time", "2 h 15 min sind 135 min. Erst wenn alle Angaben dieselbe Einheit haben, kannst du sie sicher addieren oder vergleichen.", "Bei Uhrzeiten musst du Übergänge über 60 Minuten beachten. Von 9:45 bis 10:20 sind es 15 Minuten bis 10:00 plus 20 Minuten, also 35 Minuten.", "Ändere die Startminute. Warum ist die Zeitspanne nicht einfach die Differenz der Ziffern hinter dem Doppelpunkt?"]
+          ],
+          prozent: [
+            ["Bruch, Dezimalzahl und Prozent: drei Schreibweisen", "percent", "Prozent bedeutet von hundert. 25 % sind 25/100 = 1/4 = 0,25. Alle drei Schreibweisen beschreiben denselben Anteil.", "Um den Anteil einer Menge zu finden, multiplizierst du die Menge mit dem Anteil: ein Viertel von 80 = 80 : 4 = 20. Achte darauf, was das Ganze ist.", "Behalte 25 % und verdopple das Ganze. Was passiert mit dem Prozentwert?"],
+            ["Proportional rechnen und Dreisatz", "proportion", "Wenn jedes Heft gleich viel kostet, wächst der Preis im gleichen Verhältnis wie die Anzahl. Doppelt so viele Hefte kosten doppelt so viel.", "Im Dreisatz rechnest du zuerst auf ein Stück zurück und dann auf die gesuchte Stückzahl: 3 Hefte → 6 €; 1 Heft → 2 €; 5 Hefte → 10 €. Eine feste Zusatzgebühr würde diesen Zusammenhang verändern.", "Ändere die gesuchte Anzahl. Prüfe, ob Preis : Anzahl stets denselben Stückpreis ergibt."],
+            ["Maßstab: vom Bild zur Wirklichkeit", "scale", "Maßstab 1 : 100 bedeutet: 1 cm im Bild steht für 100 cm in der Wirklichkeit. Die Einheiten müssen zusammenpassen.", "Originallänge = Bildlänge · Maßstabszahl. Bildlänge = Originallänge : Maßstabszahl. Eine 4 cm lange Strecke bei 1 : 100 ist 400 cm = 4 m lang.", "Halbiere die Bildlänge. Was passiert mit der Originallänge? Zeichne anschließend ein 4 m langes Zimmer bei 1 : 100.", "Zeichne einen Grundriss auf Papier. Miss Länge und Breite eines Raums und wandle beide im gleichen Maßstab um."],
+            ["Zahlenmuster, Tabellen und Graphen", "pattern", "Ein Muster hat eine Regel, etwa jedes Mal +3. Eine Zuordnung ordnet einer Eingabe einen Ausgabewert zu. In einer Tabelle stehen passende Werte nebeneinander.", "Im Koordinatensystem wird jedes Wertepaar zum Punkt (x | y). Lies zuerst x waagerecht und dann y senkrecht. So kannst du dieselbe Regel als Satz, Tabelle und Bild zeigen.", "Ändere die Schrittweite. Wie ändert sich die Steigung der Punktfolge?"]
+          ],
+          terme: [
+            ["Aus einer Geschichte einen Zahlterm machen", "story", "Ein Zahlterm ist eine Rechnung ohne Gleichheitszeichen. Für drei Karten zu je 8 € und 4 € gemeinsame Fahrtkosten lautet er 3 · 8 + 4.", "Der Term muss zur Geschichte passen: Die Kartenkosten werden dreimal bezahlt, die Fahrtkosten nur einmal. 3 · (8 + 4) würde drei Fahrten berechnen.", "Ändere die Anzahl der Karten. Welche Zahl im Term verändert sich – und welche bleibt gleich?"],
+            ["Unbekannte finden: ausprobieren oder rückwärts rechnen", "unknown", "Ein Kästchen oder x steht für eine gesuchte Zahl. Bei x + 5 = 12 kannst du Zahlen ausprobieren oder die Rechnung rückwärts denken.", "Vorwärts wurde 5 addiert. Rückwärts wird 5 abgezogen: 12 − 5 = 7. Eine Probe zeigt, ob die Zahl passt: 7 + 5 = 12.", "Stelle x so ein, dass die Rechnung stimmt. Welche Umkehroperation würde dir die Suche ersparen?"]
+          ],
+          geometrie: [
+            ["Winkel, Schenkel und Scheitel", "angle", "Ein Winkel besteht aus zwei Strahlen, den Schenkeln. Ihr gemeinsamer Anfangspunkt heißt Scheitel. Die Winkelgröße beschreibt die Drehung vom einen zum anderen Schenkel.", "Unter 90° heißt der Winkel spitz, genau 90° recht, zwischen 90° und 180° stumpf. Beim Messen liegt die Mitte des Geodreiecks auf dem Scheitel. Lies die Skala ab, die am Grundschenkel mit 0 beginnt.", "Stelle 89°, 90° und 91° ein. Was ändert sich an der Winkelart?", "Zeichne 35°, 90° und 125° mit einem Geodreieck. Beschrifte Scheitel und Schenkel; kontrolliere mit derselben Nullskala."],
+            ["Parallel, senkrecht und der kürzeste Abstand", "parallel", "Parallele Geraden treffen sich nicht. Ihr Abstand ist überall gleich. Senkrechte Geraden schneiden sich im rechten Winkel.", "Der Abstand zwischen einem Punkt und einer Geraden wird senkrecht gemessen. Schräg gemessene Verbindungen sind länger und gelten deshalb nicht als Abstand.", "Verschiebe den Fußpunkt nach links und rechts. Wann ist die Verbindung am kürzesten?", "Zeichne durch einen Punkt eine Senkrechte und eine Parallele zu einer vorgegebenen Geraden. Nutze die Hilfslinien des Geodreiecks."],
+            ["Kreise: Mittelpunkt, Radius und Durchmesser", "circle", "Ein Kreis besteht aus allen Punkten mit demselben Abstand zu einem Mittelpunkt. Dieser Abstand ist der Radius r. Der Durchmesser d geht durch die Mitte von einem Kreisrand zum anderen.", "Der Durchmesser enthält zwei Radien: d = 2 · r. Der Zirkel hält den Abstand zum Mittelpunkt gleich, während du ihn drehst.", "Verdopple den Radius. Wie verändert sich der Durchmesser?", "Zeichne einen Kreis mit Radius 3 cm und einen mit Durchmesser 8 cm. Überlege vorher, wie weit du den Zirkel öffnen musst."],
+            ["Spiegelungen und Koordinaten", "symmetry", "Bei einer Achsenspiegelung sind Punkt und Bildpunkt gleich weit von der Spiegelachse entfernt. Die Verbindung steht senkrecht auf der Achse. Bei einer Punktspiegelung liegt das Spiegelzentrum genau in der Mitte.", "Spiegelung an der y-Achse: (x | y) wird zu (−x | y). Punktspiegelung am Ursprung: (x | y) wird zu (−x | −y). Die Form und Größe der Figur bleiben erhalten.", "Wechsle von Achsen- zu Punktspiegelung. Was passiert jeweils mit x und y?", "Zeichne ein Dreieck auf kariertem Papier und spiegele es an einer Geraden sowie an einem Punkt. Miss die Abstände nach."],
+            ["Körper erkennen und Ansichten zuordnen", "body", "Ein Würfel hat sechs gleiche Quadratflächen. Ein Quader hat sechs Rechteckflächen. Zylinder, Kegel und Kugel haben gekrümmte Flächen; Prismen und Pyramiden haben ebene Flächen.", "Ein Netz zeigt alle Flächen aufgeklappt. Ein Grundriss zeigt den Körper von oben, ein Aufriss von vorn. Ein Schrägbild zeigt mehrere Seiten gleichzeitig, ist aber keine unverzerrte Ansicht.", "Wechsle zwischen Quader und Würfel. Vergleiche oben, vorne und das Netz. Welche Maße tauchen jeweils auf?", "Zeichne das gezeigte Netz auf Papier, schneide es aus und falte es. Zeichne Grundriss, Aufriss und Schrägbild. Benenne außerdem Prisma, Pyramide, Zylinder, Kegel und Kugel an Alltagsgegenständen."],
+            ["Prisma, Pyramide, Zylinder, Kegel und Kugel unterscheiden", "solid-types", "Achte auf die Flächen: Sind sie eben oder gekrümmt? Ein Prisma hat zwei gleiche, parallele Vielecke als Grund- und Deckfläche. Eine Pyramide hat eine Grundfläche und Dreiecke, die in einer Spitze zusammenkommen.", "Ein Zylinder hat zwei gleiche Kreisflächen und einen gekrümmten Mantel. Ein Kegel hat eine Kreisfläche und eine Spitze. Bei einer Kugel ist die ganze Oberfläche gekrümmt; sie hat keine Ecken oder Kanten.", "Wechsle den Körper. Suche für jeden ein Alltagsbeispiel und erkläre, woran du ihn erkennst."]
+          ],
+          "flaechen-volumen": [
+            ["Umfang und Fläche nicht verwechseln", "rectangle", "Der Umfang ist die Länge einmal um den Rand herum. Der Flächeninhalt zählt, wie viele Einheitsquadrate die Figur innen bedecken. Beides sind verschiedene Größen.", "Beim Rechteck liegen oben und unten die Länge l, links und rechts die Breite b: U = 2l + 2b. Innen liegen l · b Quadrate: A = l · b.", "Suche zwei Rechtecke mit demselben Umfang, aber unterschiedlichem Flächeninhalt."],
+            ["Zusammengesetzte Flächen zerlegen", "compound", "Eine kompliziertere Figur kannst du in Rechtecke zerlegen. Oder du denkst dir ein großes Rechteck und ziehst ein fehlendes Stück ab.", "Bei einer L-Form gilt: ganze Rechteckfläche minus ausgeschnittene Rechteckfläche. Die Flächeneinheiten bleiben quadratisch, zum Beispiel cm².", "Vergrößere die Aussparung. Was geschieht mit der Fläche – und was mit dem Umfang?"],
+            ["Quader: Schichten zählen und Oberfläche erklären", "cube", "Das Volumen zählt Einheitswürfel im Inneren. Die Oberfläche zählt die Einheitsquadrate auf allen Außenflächen. Oberfläche und Volumen sind also nicht dasselbe.", "Eine Schicht enthält l · b Würfel. Bei h Schichten sind es l · b · h. Die sechs Außenflächen ergeben O = 2(lb + lh + bh). Beim Würfel: O = 6a² und V = a³.", "Verdopple nur die Höhe. Was passiert mit Volumen und Oberfläche? Vergleiche danach einen Würfel mit doppelter Kantenlänge.", "Baue aus Würfeln einen Quader. Zähle zuerst eine Schicht, dann die Schichten. Zeichne oder beklebe alle Außenflächen."]
+          ],
+          daten: [
+            ["Von der Umfrage zur Häufigkeitstabelle", "data", "Bei einer Umfrage notierst du Antworten zuerst als Urliste. Eine Strichliste und Häufigkeitstabelle machen sichtbar, wie oft jede Antwort vorkommt.", "Absolute Häufigkeit = Anzahl. Relative Häufigkeit = Anzahl : Gesamtzahl. Eine gute Stichprobe passt zur Frage; nur deine Freunde zu fragen kann das Ergebnis verzerren.", "Ändere eine Häufigkeit. Verändert sich dann auch der Prozentanteil einer anderen Antwort?", "Frage mindestens zehn Mitschüler nach dem Schulweg. Lege vorher Antwortmöglichkeiten fest. Erstelle Urliste, Strichliste und Tabelle; erkläre, wen du befragt hast."],
+            ["Diagramme lesen und vergleichen", "chart", "Balken, Säulen, Kreise und Streifen können dieselben Daten zeigen. Säulen- und Balkenhöhen zeigen Anzahlen; Kreis- und Streifenanteile zeigen Teile des Ganzen.", "Lies immer Titel, Kategorien, Einheit und Skala. Eine abgeschnittene Achse kann Unterschiede größer wirken lassen. Bei einem Kreis entsprechen 100 % genau 360°.", "Wechsle die Diagrammart. Welche Information bleibt gleich, obwohl das Bild anders aussieht?", "Zeichne die Häufigkeiten als Balken-, Säulen-, Kreis- und Streifendiagramm. Übertrage die Tabelle zusätzlich in eine Tabellenkalkulation und erstelle dort ein Diagramm."],
+            ["Mittelwert und Spannweite", "statistics", "Minimum ist der kleinste Wert, Maximum der größte. Die Spannweite ist Maximum minus Minimum. Der Mittelwert verteilt die Gesamtsumme gleichmäßig auf alle Werte.", "Bei 2, 4 und 9 ist der Mittelwert (2 + 4 + 9) : 3 = 5. Der Wert 5 muss in der Liste selbst nicht vorkommen. Ein einzelner großer Wert kann den Mittelwert stark verändern.", "Vergrößere nur den letzten Wert. Beobachte Mittelwert und Spannweite. Welche Aussage kannst du daraus über die Daten machen?"]
+          ],
+          strategien: [
+            ["Sachaufgaben planen, lösen und prüfen", "story", "Lies zuerst die Frage: Was ist gesucht? Schreibe bekannte Werte mit Einheiten auf. Eine Skizze oder Tabelle zeigt, welche Werte zusammengehören.", "Wähle die Rechnung erst nach dem Verstehen. Überschlage vor dem Rechnen, rechne dann genau und kontrolliere durch eine Umkehroperation. Ein Antwortsatz sagt, was das Ergebnis bedeutet.", "Vergleiche zwei mögliche Rechnungen: Kartenanzahl · Kartenpreis + Fahrtkosten oder Kartenanzahl · (Kartenpreis + Fahrtkosten). Welche passt zur Geschichte?", "Erfinde eine eigene Geschichte zur Rechnung 4 · 6 + 3. Tausche sie mit einem Mitschüler und lasse dir den Rechenweg erklären."]
+          ]
+        };
+        for (const [id, units] of Object.entries(lessons)) {
+          const chapter = document.getElementById(id);
+          for (const child of [...chapter.children]) {
+            if (child.tagName !== "H2" && child.tagName !== "DETAILS" && !child.classList.contains("discovery")) child.remove();
+          }
+          for (const [title, kind, idea, why, challenge, practical] of units) {
+            const heading = document.createElement("h3");
+            heading.textContent = title;
+            const text = document.createElement("p");
+            text.textContent = idea;
+            const reasoning = document.createElement("div");
+            reasoning.className = "callout";
+            reasoning.textContent = `Warum funktioniert das? ${why}`;
+            chapter.append(heading, text, reasoning, createMiniLab(kind, challenge));
+            if (practical) {
+              const work = document.createElement("p");
+              work.className = "hands-on";
+              work.textContent = `Mit Papier und Werkzeug: ${practical}`;
+              chapter.append(work);
+            }
+          }
+        }
+        const notes = {
+          "negative-zahlen": "Hier stehen Skalen, Vergleichen und Veränderungen im Mittelpunkt. Allgemeine Vorzeichenregeln für Produkte und Quotienten negativer Zahlen sind als Zusatzstoff ausgeblendet.",
+          terme: "Pflichtschwerpunkt: Zahlterme aus Geschichten und Unbekannte durch Ausprobieren oder Rückwärtsrechnen finden. Umfassendes Umformen von Variablentermen ist nicht der Schwerpunkt von Klasse 5/6 M-Niveau.",
+          daten: "Pflichtschwerpunkt: Daten erheben, darstellen und auswerten. Das Würfelexperiment zeigt Häufigkeiten; die Berechnung theoretischer Wahrscheinlichkeiten wird nur als Zusatzstoff angeboten.",
+          "flaechen-volumen": "Pflichtschwerpunkt: Rechtecke, Quadrate, zusammengesetzte Rechteckflächen sowie Quader und Würfel einschließlich Oberfläche. Dreiecksflächen werden nur als Zusatz geübt."
+        };
+        for (const [id, text] of Object.entries(notes)) {
+          const note = document.createElement("p");
+          note.className = "coverage-note";
+          note.textContent = text;
+          document.getElementById(id).querySelector("h2").after(note);
+        }
+        const diceDiscovery = document.querySelector("#daten .discovery");
+        const dataDiscovery = document.createElement("div");
+        dataDiscovery.className = "discovery";
+        dataDiscovery.setAttribute("aria-label", "Schulwegdaten vergleichen");
+        const dataHeading = document.createElement("h3");
+        dataHeading.textContent = "Schulwegdaten vergleichen";
+        dataDiscovery.append(dataHeading, createMiniLab("data", "Verdopple die Anzahl der Radfahrer. Verdoppelt sich auch ihr Prozentanteil? Begründe deine Beobachtung."));
+        const extraHeading = document.createElement("h3");
+        extraHeading.textContent = "Zusatzexperiment: Würfeln und Häufigkeiten";
+        diceDiscovery.before(dataDiscovery, extraHeading);
+        document.querySelectorAll('.chapter > details').forEach(detail => {
+          detail.remove();
+        });
+        const source = document.getElementById("quellen").closest("section");
+        source.innerHTML = '<h2 id="quellen">Bildungsplan-Abgleich und Hinweise</h2><p>Überarbeitet am 12.10.2026 anhand der offiziellen M-Niveau-Kompetenztabellen für Klassen 5/6: Bildungsplan Mathematik Sekundarstufe I, Fassung vom 29.02.2024 (V2). „Leicht/Mittel/Knifflig“ bezeichnet die Aufgabenschwierigkeit und nicht die Bildungsplan-Niveaus G/M/E.</p><p>Die Aufgaben decken zentrale Inhalte und typische Anwendungen ab. Zeichnen, Messen, Argumentieren und Datenerhebungen brauchen zusätzlich die ausdrücklich genannten Papier- und Praxisaufträge. Eine automatische Zahlenprüfung ersetzt keine Beurteilung dieser Kompetenzen durch eine Lehrkraft. Zusatzstoff lässt sich separat einschalten.</p><ul>' +
+          [["01", "Zahl – Variable – Operation"], ["02", "Messen"], ["03", "Raum und Form"], ["04", "Funktionaler Zusammenhang"], ["05", "Daten und Zufall"]].map(([code, label]) => `<li><a href="https://www.bildungsplaene-bw.de/,Lde/BP2016BW_ALLG_SEK1_M.V2_IK_5-6_${code}_00" target="_blank" rel="noopener noreferrer">${label}: offizielle Kompetenztabelle</a></li>`).join("") + '</ul>';
+        const visualNote = document.createElement("p");
+        visualNote.textContent = "Visuelle Lernhilfen ergänzt am 15.10.2026: Bildwechsel und schrittweise Hilfen in jeder Mitmach-Erklärung und jeder Übungsaufgabe. Die Hilfen sind für Schüler bis Klasse 7 gestaltet; sie erweitern den Lehrplan dieser Seite nicht um den Stoff der Klasse 7. Nicht jede Aufgabe hat ein eigenes mathematisches Modell: Wo keines passt, unterstützt ein Denkplan mit Schrittkarten.";
+        source.append(visualNote);
+        expandTasks();
+      }
+
+      function expandTasks() {
+        for (const item of tasks) {
+          item.extra = /Dreieck|4a \+ 2a|Wahrscheinlichkeit|\(−3\) · 4/.test(item.question);
+          if (item.question.startsWith("Wie lautet 4 308 in Worten?")) item.question = "Tippe die Zahl ein, die 4 Tausender, 3 Hunderter und 8 Einer hat.";
+          item.explanation += " → Prüfe dein Ergebnis noch einmal: Passt es zu den gegebenen Werten und zur Frage?";
+        }
+        const add = (topic, level, question, answer, steps, tips, kind, values, extra = false) => {
+          tasks.push({ ...task(topic, level, question, String(answer), steps.join(" → "), tips), kind, values, extra });
+        };
+        const reduce = (n, d) => { const g = Number(gcd(BigInt(n), BigInt(d))); return `${n / g}/${d / g}`; };
+        const out = n => n.toLocaleString("de-DE", { maximumFractionDigits: 4 });
+        for (let i = 1; i <= 6; i += 1) {
+          const a = 20 + i * 3, b = i + 8;
+          add("Grundrechenarten", "Leicht", `Berechne ${a} + ${b}.`, a + b,
+            [`Ordne Einer unter Einer und Zehner unter Zehner.`, `${a} + ${Math.floor(b / 10) * 10} + ${b % 10} = ${a + b}.`, `Probe: ${a + b} − ${b} = ${a}.`],
+            ["Zerlege die zweite Zahl in Zehner und Einer.", "Addiere zuerst die Zehner, dann die Einer.", "Prüfe durch Abziehen der zweiten Zahl."], "addsub", [a, b, 0]);
+          add("Grundrechenarten", "Mittel", `Berechne ${a + 30} − ${b}.`, a + 30 - b,
+            [`Ziehe ${Math.floor(b / 10) * 10} und danach ${b % 10} ab.`, `${a + 30} − ${b} = ${a + 30 - b}.`, `Probe: ${a + 30 - b} + ${b} = ${a + 30}.`],
+            ["Die Zahl wird kleiner.", "Ein Zehner kann in zehn Einer getauscht werden.", "Kontrolliere mit der Addition."], "addsub", [a + 30, b, 1]);
+          add("Grundrechenarten", "Mittel", `Berechne schriftlich ${120 + i * 11} · ${i + 12}.`, (120 + i * 11) * (i + 12),
+            [`Zerlege den zweiten Faktor: ${i + 12} = 10 + ${i + 2}.`, `Teilprodukte: ${(120 + i * 11) * 10} und ${(120 + i * 11) * (i + 2)}.`, `Addiere: ${(120 + i * 11) * (i + 12)}.`, "Prüfe mit einem Überschlag."],
+            ["Rechne ein Teilprodukt für die Einerstelle.", "Das Teilprodukt für die Zehnerstelle ist zehnmal so groß.", "Addiere die beiden Teilprodukte."], "multiply", [i + 2, 6]);
+          add("Grundrechenarten", "Knifflig", `Berechne schriftlich ${(i + 11) * (100 + i * 7)} : ${i + 11}.`, 100 + i * 7,
+            [`Teile Stelle für Stelle von links nach rechts.`, `Der Quotient ist ${100 + i * 7}.`, `Probe: ${100 + i * 7} · ${i + 11} = ${(i + 11) * (100 + i * 7)}.`],
+            ["Der Divisor hat zwei Stellen.", "Nach jedem Teilen multiplizieren, abziehen und die nächste Ziffer herunterholen.", "Prüfe den Quotienten mit der Multiplikation."], "divide", [24 + i, 3]);
+          add("Grundrechenarten", "Mittel", `Berechne ${i + 5}².`, (i + 5) ** 2,
+            [`Die Basis ${i + 5} kommt zweimal als Faktor vor.`, `${i + 5} · ${i + 5} = ${(i + 5) ** 2}.`, "Das Ergebnis zählt die Kästchen in einem Quadrat."],
+            ["Hoch 2 bedeutet nicht mal 2.", "Schreibe die Basis zweimal als Faktor.", "Multipliziere die beiden gleichen Zahlen."], "power", [i + 5, 2]);
+
+          const n = i, d = 8;
+          add("Brüche", "Leicht", `Welche Zahl ist ${n}/${d} von 24?`, n * 3,
+            [`Ein Achtel von 24 ist 24 : 8 = 3.`, `${n} Achtel sind ${n} · 3 = ${n * 3}.`, "Der Bruch wirkt hier als Rechenanweisung: erst teilen, dann multiplizieren."],
+            ["Finde zunächst ein Achtel der Menge.", "Teile 24 durch den Nenner 8.", "Multipliziere das Ergebnis mit dem Zähler."], "fraction", [n, d]);
+          add("Brüche", "Mittel", `Berechne ${n}/8 + 1/4. Schreibe einen Bruch.`, reduce(n + 2, 8),
+            ["Ein Viertel wird zu zwei Achteln.", `${n}/8 + 2/8 = ${n + 2}/8.`, `Gekürzt: ${reduce(n + 2, 8)}.`],
+            ["Die Stücke müssen gleich groß sein.", "Erweitere 1/4 mit 2.", "Addiere die Zähler; behalte den Nenner."], "compare", [n > 6 ? 6 : n, 2]);
+          add("Brüche", "Mittel", `Berechne ${n}/8 · 3. Schreibe einen Bruch.`, reduce(n * 3, 8),
+            [`Drei gleiche Anteile werden zusammen genommen: ${n}/8 + ${n}/8 + ${n}/8.`, `Nur der Zähler wird mit 3 multipliziert: ${n * 3}/8.`, `Gekürzt: ${reduce(n * 3, 8)}.`],
+            ["Du nimmst den Bruch dreimal.", "Multipliziere den Zähler mit 3.", "Der Nenner bleibt 8; kürze am Ende."], "fraction", [n, 8]);
+          add("Brüche", "Knifflig", `Berechne ${n}/8 : 3. Schreibe einen Bruch.`, reduce(n, 24),
+            [`Teile den Anteil in drei gleich große Teile.`, `Das entspricht ${n}/8 · 1/3 = ${n}/24.`, `Gekürzt: ${reduce(n, 24)}.`],
+            ["Der Anteil wird kleiner.", "Teilen durch 3 ist dasselbe wie mal 1/3.", "Multipliziere den Nenner mit 3."], "fraction", [n, 8]);
+          add("Brüche", "Mittel", `Kürze ${i * 3}/${i * 4} vollständig.`, "3/4",
+            [`Zähler und Nenner haben den gemeinsamen Teiler ${i}.`, `Beide durch ${i} teilen: ${i * 3} : ${i} = 3, ${i * 4} : ${i} = 4.`, "3 und 4 haben keinen weiteren gemeinsamen Teiler."],
+            ["Suche einen gemeinsamen Teiler.", "Teile Zähler und Nenner durch denselben Wert.", "Prüfe, ob sich das Ergebnis noch weiter kürzen lässt."], "expand", [3, 4, i]);
+
+          add("Dezimalzahlen", "Leicht", `Schreibe ${i * 15}/100 als Dezimalzahl.`, (i * 15 / 100).toFixed(2),
+            [`Der Nenner 100 sagt: Hundertstel.`, `${i * 15}/100 = ${out(i * 15 / 100)}.`, "Zwei Stellen hinter dem Komma zeigen Hundertstel."],
+            ["Der Nenner bestimmt den Stellenwert.", "Für Hundertstel sind zwei Nachkommastellen nötig.", "Ergänze eine führende 0, wenn die Zahl kleiner als 1 ist."], "decimal", [i * 15]);
+          add("Dezimalzahlen", "Mittel", `Berechne ${out((i + 10) / 10)} · 0,4.`, ((i + 10) * 4 / 100).toFixed(2),
+            [`Ohne Komma: ${i + 10} · 4 = ${(i + 10) * 4}.`, "Ein Zehntel mal ein Zehntel ist ein Hundertstel.", `Ergebnis: ${out((i + 10) * 4 / 100)}.`],
+            ["Multipliziere zunächst die Zahlen ohne Komma.", "Beide Faktoren haben jeweils eine Nachkommastelle.", "Das Ergebnis wird deshalb in Hundertsteln geschrieben."], "decimal-operation", [i + 10, 4, 0]);
+          add("Größen und Einheiten", "Mittel", `Wandle ${out(i / 2)} kg in g um. Tippe die Grammzahl ein.`, i * 500,
+            ["1 kg = 1 000 g.", `${out(i / 2)} · 1 000 = ${i * 500}.`, `Antwort: ${i * 500} g.`],
+            ["Die kleinere Einheit Gramm braucht einen größeren Zahlwert.", "Ein Kilogramm hat 1 000 Gramm.", "Multipliziere den Zahlwert mit 1 000."], "units", [i, 0]);
+          add("Prozent und Zuordnungen", "Mittel", `${i + 2} Hefte kosten ${(i + 2) * 3} €. Was kosten ${i + 5} Hefte bei gleichem Stückpreis?`, (i + 5) * 3,
+            [`Ein Heft kostet ${(i + 2) * 3} : ${i + 2} = 3 €.`, `${i + 5} Hefte kosten ${i + 5} · 3 = ${(i + 5) * 3} €.`, "Voraussetzung: gleicher Stückpreis, keine feste Zusatzgebühr."],
+            ["Rechne zuerst auf ein Heft zurück.", "Teile den bekannten Gesamtpreis durch die bekannte Anzahl.", "Multipliziere den Stückpreis mit der gesuchten Anzahl."], "proportion", [i + 2, 3, i + 5]);
+          add("Prozent und Zuordnungen", "Knifflig", `Eine Strecke ist auf dem Plan ${i} cm lang. Maßstab 1 : 200. Wie lang ist sie in Metern?`, i * 2,
+            [`1 cm entspricht 200 cm.`, `${i} cm entsprechen ${i * 200} cm.`, `In Meter: ${i * 200} : 100 = ${i * 2} m.`],
+            ["Bildlänge und Originallänge zunächst in derselben Einheit rechnen.", "Multipliziere die Zentimeterzahl mit 200.", "Wandle die erhaltenen Zentimeter in Meter um."], "scale", [i, 3]);
+          add("Fläche und Volumen", "Mittel", `Ein Quader hat Länge ${i + 1} cm, Breite 3 cm, Höhe 2 cm. Wie groß ist seine Oberfläche in cm²?`, 2 * ((i + 1) * 3 + (i + 1) * 2 + 6),
+            [`Flächenpaare: zweimal ${(i + 1) * 3}, zweimal ${(i + 1) * 2}, zweimal 6 cm².`, `Summe: 2 · (${(i + 1) * 3} + ${(i + 1) * 2} + 6) = ${2 * ((i + 1) * 5 + 6)} cm².`, "Die Oberfläche zählt Außenflächen, nicht Würfel im Inneren."],
+            ["Ein Quader hat sechs Flächen, je zwei sind gleich.", "Berechne Länge · Breite, Länge · Höhe und Breite · Höhe.", "Addiere diese drei Flächeninhalte und verdopple die Summe."], "cube", [i + 1, 3, 2]);
+          add("Daten und Zufall", "Mittel", `In einer Liste stehen ${i}, ${i + 2}, ${i + 4}. Wie groß ist ihr Mittelwert?`, i + 2,
+            [`Summe: ${i} + ${i + 2} + ${i + 4} = ${3 * i + 6}.`, `Drei Werte: ${3 * i + 6} : 3 = ${i + 2}.`, "Das ist die gleichmäßig verteilte Gesamtsumme."],
+            ["Addiere alle Werte.", "Zähle die Anzahl der Werte, nicht die verschiedenen Werte.", "Teile die Summe durch diese Anzahl."], "statistics", [i, i + 2, i + 4]);
+        }
+        const fixed = [
+          ["Zahlen und Runden", "Leicht", "Welche Zahl ist 1 Milliarde plus 2 Millionen? Ohne Tausenderpunkte eintippen.", "1002000000", ["1 Milliarde = 1 000 000 000.", "2 Millionen = 2 000 000.", "Summe: 1 002 000 000."], ["Ordne die Werte in Dreiergruppen.", "Millionen stehen drei Stellen links von Tausendern.", "Addiere nur passende Stellen."], "place", [1, 0, 2]],
+          ["Zahlen und Runden", "Mittel", "Schreibe 1 Billion als Ziffern ohne Punkte oder Leerzeichen.", "1000000000000", ["1 Million hat 6 Nullen.", "1 Milliarde hat 9 Nullen.", "1 Billion hat 12 Nullen."], ["Eine Billion sind tausend Milliarden.", "Eine Milliarde hat neun Nullen.", "Bei mal 1 000 kommen drei weitere Nullen hinzu."], "place", [1, 0, 0]],
+          ["Zahlen und Runden", "Mittel", "Welche Zahl bedeutet römisch XIV?", "14", ["X = 10.", "IV = 5 − 1 = 4.", "10 + 4 = 14."], ["Lies X als 10.", "I vor V bedeutet abziehen.", "Addiere X und IV."], "roman", [14]],
+          ["Zahlen und Runden", "Knifflig", "Nenne irgendeine Zahl strikt zwischen 0,4 und 0,5.", "0.45", ["Ein möglicher Zwischenwert ist 0,45.", "0,4 < 0,45 < 0,5.", "Es gibt beliebig viele passende Werte; nicht nur 0,45."], ["Ergänze weitere Nachkommastellen.", "Die Zahl muss größer als 0,4 sein.", "Sie muss zugleich kleiner als 0,5 sein."], "density", [4, 5]],
+          ["Teilbarkeit", "Leicht", "Ist 126 durch 9 teilbar? 1 für Ja, 0 für Nein.", "1", ["Quersumme: 1 + 2 + 6 = 9.", "9 ist durch 9 teilbar.", "Deshalb ist 126 durch 9 teilbar."], ["Bilde die Quersumme.", "Prüfe diese Summe auf Teilbarkeit durch 9.", "Die Teilbarkeitsregel überträgt das Ergebnis auf 126."], "divisibility", [126]],
+          ["Teilbarkeit", "Mittel", "24 = 2 · 2 · 2 · ? Ergänze den fehlenden Primfaktor.", "3", ["2 · 2 · 2 = 8.", "24 : 8 = 3.", "3 ist eine Primzahl."], ["Multipliziere die bekannten Faktoren.", "Teile 24 durch dieses Produkt.", "Kontrolliere, ob der gefundene Faktor eine Primzahl ist."], "factors", [24]],
+          ["Brüche", "Mittel", "Berechne 5/6 − 1/3. Schreibe einen Bruch.", "1/2", ["1/3 = 2/6.", "5/6 − 2/6 = 3/6.", "3/6 = 1/2."], ["Finde einen gemeinsamen Nenner.", "Schreibe Drittel als Sechstel.", "Subtrahiere nur die Zähler und kürze."], "compare", [5, 3]],
+          ["Brüche", "Knifflig", "2/3 · 3/4: Welcher Anteil entsteht? Schreibe einen Bruch.", "1/2", ["Zähler mal Zähler: 2 · 3 = 6.", "Nenner mal Nenner: 3 · 4 = 12.", "6/12 = 1/2."], ["Es geht um einen Teil von einem Teil.", "Multipliziere Zähler und Nenner jeweils miteinander.", "Kürze das Produkt vollständig."], "fraction-product", [3, 2]],
+          ["Brüche", "Knifflig", "3/4 : 1/8: Wie oft passt ein Achtel in drei Viertel?", "6", ["3/4 = 6/8.", "Sechs Achtel enthalten sechs einzelne Achtel.", "Mit Kehrwert: 3/4 · 8 = 6."], ["Schreibe die Menge in Achteln.", "Zähle die Achtel.", "Prüfe mit dem Kehrwert."], "fraction-division", [6, 1]],
+          ["Dezimalzahlen", "Mittel", "1/3 ist 0,333… Runde auf zwei Nachkommastellen.", "0.33", ["Die dritte Nachkommastelle ist 3.", "Bei 3 wird abgerundet.", "0,33 ist ein Näherungswert, nicht exakt 1/3."], ["Nur zwei Nachkommastellen sollen bleiben.", "Schaue auf die dritte Ziffer.", "Kennzeichne im Rechenweg das Ergebnis als Näherung."], "periodic", [0]],
+          ["Dezimalzahlen", "Mittel", "Welchen Nenner hat der vollständig gekürzte Bruch für 0,125? Tippe nur den Nenner.", "8", ["0,125 = 125/1000.", "Zähler und Nenner durch 125 teilen.", "Ergebnis 1/8; der Nenner ist 8."], ["Drei Nachkommastellen bedeuten Tausendstel.", "Schreibe 125/1000.", "Kürze beide Zahlen durch denselben Wert."], "decimal", [12]],
+          ["Negative Zahlen", "Leicht", "Um 7 Uhr sind es −5 °C. Es wird 3 °C wärmer. Wie warm ist es dann?", "-2", ["Start bei −5.", "Drei Schritte nach rechts.", "Die Temperatur ist −2 °C."], ["Wärmer bedeutet nach rechts.", "Gehe drei Schritte ab −5.", "Du erreichst dabei noch nicht die Null."], "negative", [-5, 3]],
+          ["Negative Zahlen", "Mittel", "Wie weit liegen −3 und +4 auf dem Zahlenstrahl auseinander?", "7", ["Von −3 bis 0: 3 Schritte.", "Von 0 bis +4: 4 Schritte.", "Abstand: 3 + 4 = 7."], ["Abstand ist immer nicht negativ.", "Zähle zuerst bis zur Null.", "Addiere dann die Schritte von Null bis +4."], "distance", [-3, 4]],
+          ["Größen und Einheiten", "Mittel", "Wie viele Minuten liegen zwischen 9:45 und 10:20?", "35", ["9:45 bis 10:00: 15 Minuten.", "10:00 bis 10:20: 20 Minuten.", "Zusammen 35 Minuten."], ["Teile die Zeitspanne an der vollen Stunde.", "Eine Stunde hat 60 Minuten.", "Addiere beide Teilzeitspannen."], "time", [45, 35]],
+          ["Größen und Einheiten", "Mittel", "Wie viele Milliliter sind 0,75 Liter?", "750", ["1 l = 1 000 ml.", "0,75 · 1 000 = 750.", "Antwort: 750 ml."], ["Die Einheit wird kleiner.", "Der Zahlenwert wird deshalb größer.", "Multipliziere mit 1 000."], "units", [1, 0]],
+          ["Größen und Einheiten", "Knifflig", "Wie viele dm³ sind 2 m³?", "2000", ["1 m = 10 dm.", "1 m³ = 10 · 10 · 10 = 1 000 dm³.", "2 m³ = 2 000 dm³."], ["Bei Volumen wird in drei Richtungen umgerechnet.", "Pro Richtung ist der Faktor hier 10.", "Wende den Faktor 1 000 auf beide Kubikmeter an."], "units", [2, 2]],
+          ["Prozent und Zuordnungen", "Leicht", "3/4 entspricht wie viel Prozent? Tippe nur die Prozentzahl.", "75", ["Auf Hundertstel erweitern: 3/4 = 75/100.", "75 von 100 bedeutet 75 %.", "Dezimalzahl: 0,75."], ["Prozent bedeutet Hundertstel.", "Erweitere Zähler und Nenner mit 25.", "Der Zähler ist nun die Prozentzahl."], "percent", [75, 100]],
+          ["Prozent und Zuordnungen", "Mittel", "Zahlenfolge: 2, 5, 8, 11, … Welche Zahl folgt?", "14", ["Jeder Schritt addiert 3.", "11 + 3 = 14.", "Die nächsten Zahlen wären 17 und 20."], ["Vergleiche die Nachbarzahlen.", "Suche eine immer gleiche Änderung.", "Wende dieselbe Änderung auf 11 an."], "pattern", [3]],
+          ["Prozent und Zuordnungen", "Knifflig", "Eine Taxifahrt kostet 4 € Grundgebühr plus 2 € je Kilometer. Sind Gesamtpreis und Strecke proportional? 1 für Ja, 0 für Nein.", "0", ["1 km kostet 6 €, 2 km kosten 8 €.", "Doppelte Strecke ergibt nicht doppelten Preis.", "Die feste Grundgebühr verhindert Proportionalität."], ["Teste eine Verdoppelung der Strecke.", "Die Grundgebühr wird nicht verdoppelt.", "Vergleiche Preis geteilt durch Kilometer."], "story", [2, 2, 4]],
+          ["Terme und Gleichungen", "Mittel", "Finde x durch Rückwärtsrechnen: x : 4 = 7.", "28", ["Die gesuchte Zahl wurde durch 4 geteilt.", "Umkehroperation: 7 · 4 = 28.", "Probe: 28 : 4 = 7."], ["Die Division muss rückgängig gemacht werden.", "Benutze eine Multiplikation.", "Prüfe deine gefundene Zahl im ursprünglichen Ausdruck."], "divide", [28, 4]],
+          ["Geometrie", "Leicht", "Ein Kreis hat Radius 4 cm. Wie groß ist sein Durchmesser in cm?", "8", ["Ein Durchmesser besteht aus zwei Radien.", "2 · 4 cm = 8 cm.", "Der Durchmesser verläuft durch den Mittelpunkt."], ["Radius und Durchmesser sind nicht gleich.", "Der Durchmesser enthält zwei Radien.", "Verdopple den Radius."], "circle", [4]],
+          ["Geometrie", "Mittel", "Ein Punkt (3 | 2) wird an der y-Achse gespiegelt. Welche x-Koordinate hat der Bildpunkt?", "-3", ["Die y-Achse ist senkrecht bei x = 0.", "Gleicher Abstand auf der anderen Seite: x = −3.", "Die y-Koordinate bleibt 2."], ["Die Spiegelachse liegt bei x = 0.", "Der Abstand 3 bleibt gleich.", "Wechsle die Seite und damit das Vorzeichen der x-Koordinate."], "symmetry", [3, 2, 0]],
+          ["Geometrie", "Knifflig", "Ein Punkt (3 | 2) wird am Ursprung gespiegelt. Welche y-Koordinate hat der Bildpunkt?", "-2", ["Das Zentrum liegt bei (0 | 0).", "Beide Vorzeichen wechseln.", "Bildpunkt (−3 | −2); y = −2."], ["Bei einer Punktspiegelung liegt das Zentrum in der Mitte.", "Beide Koordinaten wechseln das Vorzeichen.", "Gesucht ist nur die zweite Koordinate."], "symmetry", [3, 2, 1]],
+          ["Geometrie", "Leicht", "Wie viele Flächen hat ein Würfel?", "6", ["Oben und unten: 2.", "Vorne und hinten: 2.", "Links und rechts: 2; insgesamt 6."], ["Denke an die gegenüberliegenden Flächenpaare.", "Zähle drei Paare.", "Jedes Paar enthält zwei Flächen."], "body", [1]],
+          ["Geometrie", "Mittel", "Wie viele Kanten hat ein Quader?", "12", ["Oben sind 4 Kanten.", "Unten sind 4 Kanten.", "Vier Verbindungskanten ergeben zusammen 12."], ["Zähle oben und unten getrennt.", "Vergiss die senkrechten Verbindungskanten nicht.", "Eine Kante gehört zu zwei Flächen, darf aber nur einmal gezählt werden."], "body", [0]],
+          ["Fläche und Volumen", "Knifflig", "Ein Rechteck 6 cm × 4 cm hat an einer Ecke eine Aussparung 3 cm × 2 cm. Wie groß ist die Restfläche in cm²?", "18", ["Große Fläche: 6 · 4 = 24 cm².", "Aussparung: 3 · 2 = 6 cm².", "Rest: 24 − 6 = 18 cm²."], ["Berechne zuerst das vollständige Rechteck.", "Berechne die ausgeschnittene Fläche separat.", "Ziehe die Aussparung ab."], "compound", [3, 2]],
+          ["Fläche und Volumen", "Knifflig", "Zwei Würfel mit Kantenlänge 2 cm sind an einer ganzen Fläche zusammengeklebt. Wie groß ist die äußere Oberfläche in cm²?", "40", ["Ein Würfel: 6 · 2² = 24 cm²; beide: 48 cm².", "Zwei Kontaktflächen liegen innen, je 4 cm².", "Außen: 48 − 8 = 40 cm²."], ["Berechne zunächst beide Würfeloberflächen.", "Die verklebten Flächen gehören nicht mehr zur Außenfläche.", "Ziehe die Kontaktfläche zweimal ab."], "cube", [4, 2, 2]],
+          ["Daten und Zufall", "Leicht", "10 Kinder wurden befragt. 4 kommen zu Fuß. Wie groß ist ihre relative Häufigkeit in Prozent?", "40", ["Anzahl: 4; Gesamtzahl: 10.", "4/10 = 0,4.", "0,4 entspricht 40 %."], ["Unterscheide Anzahl und Anteil.", "Teile die Anzahl durch die Gesamtzahl.", "Multipliziere den Anteil mit 100 für Prozent."], "data", [4, 3, 3]],
+          ["Daten und Zufall", "Mittel", "Die Werte sind 2, 4, 9. Wie groß ist die Spannweite?", "7", ["Minimum ist 2.", "Maximum ist 9.", "Spannweite: 9 − 2 = 7."], ["Suche kleinsten und größten Wert.", "Die mittlere Zahl brauchst du hier nicht.", "Ziehe das Minimum vom Maximum ab."], "statistics", [2, 4, 9]],
+          ["Daten und Zufall", "Knifflig", "Eine Kategorie hat 25 % der Antworten. Wie groß ist ihr Winkel im Kreisdiagramm?", "90", ["Der gesamte Kreis entspricht 360°.", "25 % sind ein Viertel.", "360° : 4 = 90°."], ["100 % ist der volle Kreis.", "Wandle 25 % in einen Bruch um.", "Nimm diesen Bruch von 360°."], "percent", [25, 100]]
+        ];
+        for (const item of fixed) add(...item);
+        const varied = [
+          ["Grundrechenarten", "Leicht", "Bei 8 · 5 heißen 8 und 5 Faktoren. Wie heißt das Ergebnis? Tippe das Fachwort ein.", "Produkt", ["Bei einer Multiplikation heißen die Zahlen Faktoren.", "Das Ergebnis heißt Produkt.", "Hier ist das Produkt 40."], ["Bestimme die Rechenart.", "Bei Mal rechnest du eine Multiplikation.", "Das gesuchte Fachwort beginnt mit P."]],
+          ["Grundrechenarten", "Mittel", "Fehler finden: Mia rechnet 7 + 3 · 4 = 40. Wie lautet das richtige Ergebnis?", "19", ["Zuerst 3 · 4 = 12.", "Dann 7 + 12 = 19.", "Mia hat fälschlich zuerst addiert."], ["Es gibt keine Klammer.", "Punktrechnung geht vor Strichrechnung.", "Addiere 7 erst nach der Multiplikation."]],
+          ["Grundrechenarten", "Mittel", "Nutze einen Rechenvorteil: 25 · 17 · 4 = ?", "1700", ["Tausche die Faktoren: 25 · 4 · 17.", "25 · 4 = 100.", "100 · 17 = 1 700."], ["Bei einer Multiplikation darfst du Faktoren vertauschen.", "Welche zwei Faktoren ergeben 100?", "Multipliziere diese 100 mit dem übrigen Faktor."]],
+          ["Brüche", "Mittel", "Fehler finden: 1/2 + 1/3 ist nicht 2/5. Welcher Bruch ist richtig?", "5/6", ["1/2 = 3/6; 1/3 = 2/6.", "3/6 + 2/6 = 5/6.", "Nenner werden beim Addieren nicht addiert."], ["Die Stücke müssen gleich groß sein.", "Nutze Sechstel.", "Addiere nur die Zähler."]],
+          ["Dezimalzahlen", "Mittel", "Ergänze die fehlende Zahl: 0,7 + ? = 1.", "0.3", ["Schreibe 1 als 1,0.", "1,0 − 0,7 = 0,3.", "Probe: 0,7 + 0,3 = 1."], ["Suche den Abstand zur 1.", "Nutze die Umkehroperation.", "Wie viele Zehntel fehlen bis zehn Zehntel?"]],
+          ["Prozent und Zuordnungen", "Knifflig", "Maßstab 1 : 100: Eine echte Strecke ist 5 m lang. Wie viele Zentimeter misst sie auf dem Plan?", "5", ["5 m = 500 cm.", "Bildlänge = 500 cm : 100 = 5 cm.", "Der Plan ist kleiner als die Wirklichkeit."], ["Wandle zuerst Meter in Zentimeter um.", "Rechne bei beiden Längen mit derselben Einheit.", "Vom Original zum Bild wird durch die Maßstabszahl geteilt."]],
+          ["Geometrie", "Leicht", "Eine Konservendose hat zwei Kreisflächen und einen gekrümmten Mantel. Wie heißt dieser Körper? Tippe den Körpernamen ein.", "Zylinder", ["Die zwei Kreisflächen sind gleich groß und parallel.", "Dazwischen liegt ein gekrümmter Mantel.", "Der Körper heißt Zylinder."], ["Die Dose hat keine Spitze.", "Die Grundflächen sind Kreise.", "Das gesuchte Wort beginnt mit Z."]],
+          ["Geometrie", "Mittel", "Wie viele Symmetrieachsen hat ein Quadrat?", "4", ["Eine waagerechte und eine senkrechte Mittellinie.", "Außerdem die beiden Diagonalen.", "Das ergibt vier Symmetrieachsen."], ["Eine Spiegelung muss das Quadrat auf sich selbst abbilden.", "Prüfe Mittellinien und Diagonalen.", "Zähle jede Achse nur einmal."]],
+          ["Geometrie", "Mittel", "Ein Rechteck hat Seitenlängen 3 cm und 5 cm. Ist es auch ein Quadrat? 1 für Ja, 0 für Nein.", "0", ["Ein Quadrat hat vier gleich lange Seiten.", "Hier sind die Seitenlängen 3 cm und 5 cm verschieden.", "Das Rechteck ist deshalb kein Quadrat."], ["Ein Quadrat ist ein besonderes Rechteck.", "Vergleiche die Seitenlängen.", "Vier rechte Winkel allein reichen nicht für ein Quadrat."]],
+          ["Daten und Zufall", "Mittel", "Befragt wurden nur die 10 Mitglieder der Fußball-AG. Gilt ihr Lieblingssport sicher für die ganze Schule? 1 für Ja, 0 für Nein.", "0", ["Die Fußball-AG ist keine ausgewogene Stichprobe der Schule.", "Sportinteressen können dort anders verteilt sein.", "Die Aussage lässt sich nicht sicher auf alle Schüler übertragen."], ["Überlege, wer nicht befragt wurde.", "Mitglieder einer Sport-AG können besondere Interessen haben.", "Eine Stichprobe muss zur untersuchten Gruppe passen."]],
+          ["Daten und Zufall", "Mittel", "Strichliste: Bus ||||, Rad |||, zu Fuß ||. Wie viele Antworten gibt es insgesamt?", "9", ["Bus: 4, Rad: 3, zu Fuß: 2.", "4 + 3 + 2 = 9.", "Die Summe der absoluten Häufigkeiten ist die Gesamtzahl."], ["Jeder Strich zählt eine Antwort.", "Zähle jede Kategorie.", "Addiere die drei Anzahlen."]],
+          ["Daten und Zufall", "Knifflig", "Die Werte sind 2, 2 und 8. Muss der Mittelwert selbst einer dieser Werte sein? 1 für Ja, 0 für Nein.", "0", ["Summe: 2 + 2 + 8 = 12.", "Mittelwert: 12 : 3 = 4.", "4 steht nicht in der Liste. Ein Mittelwert muss kein Einzelwert sein."], ["Berechne zuerst den Mittelwert.", "Vergleiche ihn mit den Einzelwerten.", "Prüfe, ob die Aussage für dieses Gegenbeispiel stimmt."]]
+        ];
+        for (const [topic, level, question, answer, steps, tips] of varied) {
+          add(topic, level, question, answer, steps, tips);
+          if (!rational(answer)) tasks[tasks.length - 1].answerType = "text";
+          if (answer === "Zylinder") {
+            tasks[tasks.length - 1].kind = "solid-types";
+            tasks[tasks.length - 1].values = [2];
+          }
+        }
+        for (let step = 1; step <= 4; step += 1) {
+          add("Prozent und Zuordnungen", step <= 2 ? "Leicht" : "Mittel",
+            "Lies das Diagramm: Welchen y-Wert hat der Punkt bei x = 3?", step * 3,
+            ["Suche 3 auf der waagerechten x-Achse.", "Gehe senkrecht nach oben zum blauen Punkt.", `Lies links den y-Wert ab: ${step * 3}. Die Regel lautet y = ${step} · x.`],
+            ["Die erste Koordinate steht auf der waagerechten Achse.", "Suche den blauen Punkt direkt über x = 3.", "Lies seine Höhe an der beschrifteten y-Achse ab."], "pattern", [step]);
+          tasks[tasks.length - 1].showPattern = true;
+        }
+        const intervalTask = tasks.find(item => item.question.startsWith("Nenne irgendeine"));
+        intervalTask.interval = [0.4, 0.5];
+        const romanTask = task("Zahlen und Runden", "Mittel", "Schreibe 19 mit römischen Zeichen.", "XIX",
+          "10 wird X geschrieben. → 9 wird IX geschrieben. → Zusammen: XIX.", ["Beginne mit dem Zeichen für 10.", "9 wird als eins vor zehn geschrieben.", "Stelle die beiden Zahlteile hintereinander."]);
+        romanTask.answerType = "text"; romanTask.kind = "roman"; romanTask.values = [19]; tasks.push(romanTask);
+        tasks.forEach(item => {
+          item.requireReducedFraction = /kürz|gekürzt/i.test(item.question) && !/nur den Nenner/i.test(item.question);
+        });
+        tasks.sort((first, second) => ["Leicht", "Mittel", "Knifflig"].indexOf(first.level) - ["Leicht", "Mittel", "Knifflig"].indexOf(second.level));
+      }
+
+      function createMiniLab(kind, challenge) {
+        const settings = {
+          place: [["Hunderter", 0, 9, 3], ["Zehner", 0, 9, 2], ["Einer", 0, 9, 4]],
+          roman: [["Zahl", 1, 49, 14]],
+          round: [["Zahl", 1200, 1300, 1249]],
+          density: [["Erstes Zehntel", 0, 8, 4], ["Zweites Zehntel", 1, 9, 5]],
+          addsub: [["Erste Zahl", 20, 60, 28], ["Zweite Zahl", 1, 19, 17], ["Rechenart", ["Plus", "Minus"], 0]],
+          multiply: [["Reihen", 1, 9, 4], ["Spalten", 1, 12, 6]],
+          divide: [["Dividend", 1, 40, 17], ["Divisor", 1, 8, 4]],
+          power: [["Basis", 1, 15, 3], ["Exponent", 2, 4, 2]],
+          order: [["Erste Zahl", 1, 12, 4], ["Zweite Zahl", 1, 8, 3], ["Dritte Zahl", 1, 8, 2]],
+          divisibility: [["Zahl", 10, 199, 126]],
+          factors: [["Zahl", 2, 60, 24]],
+          common: [["Erste Zahl", 2, 20, 8], ["Zweite Zahl", 2, 20, 12]],
+          fraction: [["Zähler", 0, 12, 7], ["Nenner", 2, 8, 4]],
+          "fraction-operator": [["Viertel auswählen", 0, 4, 3], ["Dinge pro Viertel", 1, 8, 5]],
+          expand: [["Zähler", 1, 4, 1], ["Nenner", 4, 6, 4], ["Erweiterungsfaktor", 1, 4, 2]],
+          compare: [["Erster Zähler (Nenner 6)", 0, 6, 3], ["Zweiter Zähler (Nenner 8)", 0, 8, 4]],
+          "fraction-sum": [["Drittel", 0, 3, 1], ["Viertel", 0, 4, 1], ["Rechenart", ["Plus", "Minus"], 0]],
+          "fraction-product": [["Anteil in Vierteln", 1, 4, 3], ["Davon wie viele Drittel?", 1, 3, 2]],
+          "fraction-division": [["Achtel im großen Streifen", 1, 8, 4], ["Achtel je kleinem Stück", 1, 4, 2]],
+          decimal: [["Hundertstel", 0, 100, 70]],
+          "decimal-operation": [["Erste Zahl in Zehnteln", 1, 30, 12], ["Zweite Zahl in Zehnteln", 1, 9, 3], ["Rechenart", ["Mal", "Geteilt"], 0]],
+          periodic: [["Divisor", ["3", "4", "6", "8"], 0]],
+          negative: [["Starttemperatur", -8, 8, -5], ["Änderung", -8, 8, 3]],
+          distance: [["Erster Punkt", -8, 8, -3], ["Zweiter Punkt", -8, 8, 4]],
+          measure: [["Länge in Zentimetern", 1, 10, 6]],
+          units: [["Meter-Einheiten", 1, 5, 1], ["Größe", ["Länge", "Fläche", "Volumen"], 0]],
+          time: [["Startminute nach 9 Uhr", 0, 59, 45], ["Dauer in Minuten", 1, 90, 35]],
+          percent: [["Prozentsatz", 0, 100, 25], ["Ganzes", 20, 100, 80]],
+          proportion: [["Bekannte Anzahl", 1, 8, 3], ["Stückpreis in Euro", 1, 6, 2], ["Gesuchte Anzahl", 1, 12, 5]],
+          scale: [["Bildlänge in Zentimetern", 1, 10, 4], ["Maßstabszahl", ["10", "50", "100", "200"], 2]],
+          pattern: [["Schrittweite", 1, 5, 3]],
+          story: [["Kartenanzahl", 1, 6, 3], ["Kartenpreis in Euro", 1, 12, 8], ["Fahrtkosten in Euro", 0, 10, 4]],
+          unknown: [["Gesuchte Zahl x", 0, 12, 4]],
+          angle: [["Winkel in Grad", 1, 180, 90]],
+          parallel: [["Fußpunkt verschieben", -5, 5, 0]],
+          circle: [["Radius in Zentimetern", 1, 5, 3]],
+          symmetry: [["x-Koordinate", 1, 4, 3], ["y-Koordinate", 1, 4, 2], ["Spiegelung", ["An der y-Achse", "Am Ursprung"], 0]],
+          body: [["Körper", ["Quader", "Würfel"], 0]],
+          "solid-types": [["Körper", ["Prisma", "Pyramide", "Zylinder", "Kegel", "Kugel"], 0]],
+          rectangle: [["Länge", 1, 10, 6], ["Breite", 1, 8, 4]],
+          compound: [["Aussparung breit", 1, 4, 3], ["Aussparung hoch", 1, 3, 2]],
+          cube: [["Länge", 1, 6, 4], ["Breite", 1, 6, 3], ["Höhe", 1, 6, 2]],
+          data: [["Zu Fuß", 1, 10, 4], ["Fahrrad", 1, 10, 3], ["Bus", 1, 10, 3]],
+          chart: [["Diagrammart", ["Säulen", "Balken", "Kreis", "Streifen"], 0]],
+          statistics: [["Erster Wert", 0, 10, 2], ["Zweiter Wert", 0, 10, 4], ["Dritter Wert", 0, 20, 9]]
+        };
+        if (!settings[kind]) throw new Error(`Keine Mitmach-Station für ${kind}`);
+        const box = document.createElement("div");
+        box.className = "mini-lab";
+        box.dataset.experiment = kind;
+        const lead = document.createElement("p");
+        lead.textContent = "Probiere selbst: Verändere einen Wert. Beobachte zuerst das Bild, dann die Rechenschritte.";
+        const controls = document.createElement("div");
+        controls.className = "mini-controls";
+        const fields = settings[kind].map(([name, min, max, initial], index) => {
+          const label = document.createElement("label");
+          const title = document.createElement("span");
+          const value = document.createElement("output");
+          title.textContent = name;
+          let field;
+          if (Array.isArray(min)) {
+            field = document.createElement("select");
+            min.forEach((text, position) => {
+              const option = document.createElement("option");
+              option.value = String(position);
+              option.textContent = text;
+              field.append(option);
+            });
+            field.value = String(max);
+          } else {
+            field = document.createElement("input");
+            field.type = "range";
+            field.min = String(min);
+            field.max = String(max);
+            field.value = String(initial);
+          }
+          field.id = `experiment-${kind}-${document.querySelectorAll(".mini-lab").length}-${index}`;
+          label.htmlFor = field.id;
+          value.htmlFor = field.id;
+          label.append(title, value, field);
+          controls.append(label);
+          field.addEventListener("input", render);
+          field.addEventListener("change", render);
+          return { field, value };
+        });
+        const coach = createVisualCoach("Eine Idee – mehrere Bilder");
+        const aha = document.createElement("p");
+        aha.className = "mini-challenge";
+        aha.textContent = `Dein Forscherauftrag: ${challenge}`;
+        box.append(lead, controls, coach.element, aha);
+        render();
+        function render() {
+          const values = fields.map(({ field, value }) => {
+            value.textContent = field.tagName === "SELECT" ? field.selectedOptions[0].textContent : field.value;
+            return Number(field.value);
+          });
+          const model = experimentModel(kind, values);
+          coach.update([
+            { name: "Entdeckerbild", draw: () => visualFigure(model.svg, model.caption) },
+            ...lessonVisualModels(kind, values)
+          ], model.steps);
+        }
+        return box;
+      }
+
+      function visualFigure(svg, caption, height = 250) {
+        const content = document.createElement("div");
+        const image = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        image.setAttribute("viewBox", `0 0 560 ${height}`);
+        image.setAttribute("role", "img");
+        image.setAttribute("aria-label", caption);
+        image.innerHTML = svg;
+        const description = document.createElement("p");
+        description.className = "coach-caption";
+        description.textContent = caption;
+        content.append(image, description);
+        return content;
+      }
+
+      function visualStepCards(steps, shown) {
+        const flow = document.createElement("div");
+        flow.className = "coach-flow";
+        const visible = steps.slice(0, shown);
+        if (!visible.length) {
+          const prompt = document.createElement("p");
+          prompt.textContent = "Schiebe „Hilfe in kleinen Schritten“ nach rechts. Eine Karte nach der anderen wird sichtbar.";
+          flow.append(prompt);
+        }
+        visible.forEach((text, index) => {
+          const card = document.createElement("div");
+          card.className = `coach-tile${index === visible.length - 1 ? " is-current" : ""}`;
+          const number = document.createElement("strong");
+          number.textContent = `Schritt ${index + 1}${index ? " · darauf aufbauen" : " · hier anfangen"}`;
+          const description = document.createElement("span");
+          description.textContent = text;
+          card.append(number, description);
+          flow.append(card);
+        });
+        return flow;
+      }
+
+      function createVisualCoach(title, practice = false) {
+        const element = document.createElement("section");
+        element.className = "visual-coach";
+        element.setAttribute("aria-label", title);
+        const heading = document.createElement("h4");
+        heading.textContent = title;
+        const intro = document.createElement("p");
+        intro.className = "coach-legend";
+        intro.textContent = practice
+          ? "Die Zahlen der Aufgabe bleiben gleich. Wechsle das Bild oder hole dir einen Denkschritt. Rechne das Ergebnis selbst."
+          : "Oben änderst du die Zahlen. Mit „Bild auswählen“ siehst du dieselben Zahlen anders. Die Hilfe zeigt dir einen kleinen Schritt nach dem anderen.";
+        const controls = document.createElement("div");
+        controls.className = "coach-controls";
+        const id = document.querySelectorAll(".visual-coach").length;
+        const slider = (key, text) => {
+          const label = document.createElement("label");
+          const name = document.createElement("span");
+          name.textContent = text;
+          const input = document.createElement("input");
+          input.type = "range"; input.min = "0"; input.step = "1";
+          input.id = `coach-${id}-${key}`;
+          input.dataset.coachControl = key;
+          label.htmlFor = input.id;
+          const output = document.createElement("output");
+          output.htmlFor = input.id;
+          label.append(name, output, input);
+          controls.append(label);
+          input.addEventListener("input", render);
+          input.addEventListener("change", render);
+          return { input, output };
+        };
+        const view = slider("view", "Bild auswählen");
+        const help = slider("help", "Hilfe in kleinen Schritten");
+        help.input.value = practice ? "0" : "1";
+        const buttons = document.createElement("div");
+        buttons.className = "coach-buttons";
+        const button = (text, action) => {
+          const control = document.createElement("button");
+          control.type = "button";
+          control.textContent = text;
+          control.addEventListener("click", action);
+          buttons.append(control);
+        };
+        button("Anderes Bild", () => {
+          view.input.value = String((Number(view.input.value) + 1) % models.length); render();
+        });
+        button("Ein Schritt weiter", () => {
+          help.input.value = String(Math.min(steps.length, Number(help.input.value) + 1)); render();
+        });
+        button("Von vorn", () => {
+          view.input.value = "0"; help.input.value = practice ? "0" : "1"; render();
+        });
+        const picture = document.createElement("div");
+        picture.className = "coach-picture";
+        picture.id = `coach-${id}-picture`;
+        view.input.setAttribute("aria-controls", picture.id);
+        const hints = document.createElement("div");
+        hints.className = "coach-hints";
+        hints.id = `coach-${id}-hints`;
+        hints.setAttribute("aria-live", "polite");
+        help.input.setAttribute("aria-controls", `${picture.id} ${hints.id}`);
+        element.append(heading, intro, controls, buttons, picture, hints);
+        let models = [], steps = [], initialized = false;
+        function render() {
+          const index = Number(view.input.value), shown = Number(help.input.value);
+          const name = models[index].name;
+          view.output.textContent = `${index + 1} von ${models.length}: ${name}`;
+          view.input.setAttribute("aria-valuetext", view.output.textContent);
+          help.output.textContent = shown ? `Schritt ${shown} von ${steps.length}` : "Erst selbst überlegen";
+          help.input.setAttribute("aria-valuetext", help.output.textContent);
+          picture.replaceChildren(models[index].draw(shown));
+          hints.replaceChildren();
+          if (shown && index !== models.length - 1) {
+            const list = document.createElement("ol");
+            list.className = "coach-steps";
+            steps.slice(0, shown).forEach(text => {
+              const item = document.createElement("li"); item.textContent = text; list.append(item);
+            });
+            hints.append(list);
+          }
+        }
+        function update(views, instructions) {
+          steps = instructions;
+          models = [...views, { name: "Schrittkarten", draw: shown => visualStepCards(steps, shown) }];
+          view.input.max = String(models.length - 1);
+          help.input.max = String(steps.length);
+          if (!initialized) {
+            view.input.value = "0"; help.input.value = practice ? "0" : "1"; initialized = true;
+          }
+          render();
+        }
+        return { element, update };
+      }
+
+      function fractionVisualModels(fractions) {
+        const values = fractions.filter(([n, d]) => Number.isInteger(n) && Number.isInteger(d) && n >= 0 && d > 0 && d <= 100 && n <= d * 6);
+        if (!values.length) return [];
+        const rowHeight = Math.max(...values.map(([n, d]) => Math.max(1, Math.ceil(n / d)))) * 110 + 50;
+        const height = values.length * rowHeight;
+        const caption = "Jede vollständige Form ist ein Ganzes. Blau mit weißen Markierungen zeigt genommene Teile, Weiß die übrigen Teile. Der Wert bleibt beim Bildwechsel gleich.";
+        const make = (name, style) => ({ name, draw: shown => {
+          if (style === "circle") {
+            const content = document.createElement("div");
+            const gallery = document.createElement("div");
+            gallery.className = "fraction-gallery";
+            for (const [n, d] of values) {
+              const count = Math.max(1, Math.ceil(n / d));
+              for (let whole = 0; whole < count; whole += 1) {
+                const taken = Math.min(d, Math.max(0, n - whole * d));
+                const frame = document.createElement("figure");
+                const image = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+                image.setAttribute("viewBox", "0 0 220 200");
+                image.setAttribute("role", "img");
+                image.setAttribute("aria-label", `${n}/${d}, Ganzes ${whole + 1}: ${shown ? taken : 0} von ${d} Stücken gefärbt.`);
+                let svg = "";
+                for (let part = 0; part < d; part += 1) {
+                  const start = part / d * 2 * Math.PI - Math.PI / 2, end = (part + 1) / d * 2 * Math.PI - Math.PI / 2;
+                  const selected = part < taken && shown > 0;
+                  const shape = d === 1 ? '<circle cx="110" cy="93" r="78" FILL/>'
+                    : `<path d="M110 93L${110 + 78 * Math.cos(start)} ${93 + 78 * Math.sin(start)}A78 78 0 ${end - start > Math.PI ? 1 : 0} 1 ${110 + 78 * Math.cos(end)} ${93 + 78 * Math.sin(end)}Z" FILL/>`;
+                  svg += shape.replace("FILL", `fill="${selected ? "#2873b9" : "#fff"}" stroke="#344b65" stroke-width="1.5"`);
+                  if (selected) svg += `<circle cx="${110 + 50 * Math.cos((start + end) / 2)}" cy="${93 + 50 * Math.sin((start + end) / 2)}" r="2.5" fill="#fff"/>`;
+                }
+                image.innerHTML = svg;
+                const label = document.createElement("figcaption");
+                label.textContent = `${n}/${d} · Ganzes ${whole + 1}: ${shown ? taken : 0} von ${d} Stücken gefärbt`;
+                frame.append(image, label); gallery.append(frame);
+              }
+            }
+            const description = document.createElement("p");
+            description.className = "coach-caption";
+            description.textContent = shown ? caption : "Noch ungefärbt. Schiebe die Hilfe auf Schritt 1: Der Zähler bestimmt, wie viele Stücke gefärbt werden.";
+            content.append(gallery, description);
+            return content;
+          }
+          let svg = "";
+          values.forEach(([n, d], index) => {
+            const count = Math.max(1, Math.ceil(n / d)), top = index * rowHeight;
+            svg += `<text x="25" y="${top + 25}" font-size="22" fill="#17283f">${n}/${d}</text>`;
+            for (let whole = 0; whole < count; whole += 1) {
+              const taken = Math.min(d, Math.max(0, n - whole * d)), y = top + 40 + whole * 110;
+              for (let part = 0; part < d; part += 1) {
+                const x = 30 + part * 480 / d, selected = part < taken && shown > 0;
+                svg += `<rect x="${x}" y="${y + 15}" width="${480 / d}" height="40" fill="${selected ? "#2873b9" : "#fff"}" stroke="#344b65"/>`;
+                if (selected) svg += `<path d="M${x + 480 / d * .2} ${y + 45}L${x + 480 / d * .8} ${y + 25}" stroke="#fff" stroke-width="2"/>`;
+              }
+              svg += `<text x="30" y="${y + 85}" font-size="18">Ganzes ${whole + 1}: ${taken} von ${d} Teilen</text>`;
+            }
+          });
+          return visualFigure(svg, shown ? caption : "Noch ungefärbt: In wie viele gleiche Teile ist ein Ganzes geteilt? Schiebe die Hilfe auf Schritt 1, um den Anteil zu färben.", height);
+        } });
+        const line = { name: "Zahlenstrahl", draw: shown => {
+          const high = Math.max(1, ...values.map(([n, d]) => Math.ceil(n / d)));
+          let svg = '<path d="M40 110H520" stroke="#344b65" stroke-width="3"/>';
+          for (let i = 0; i <= high; i += 1) svg += `<path d="M${40 + i / high * 480} 102v16" stroke="#344b65"/><text x="${35 + i / high * 480}" y="145" font-size="20">${i}</text>`;
+          values.forEach(([n, d], i) => {
+            const x = 40 + n / d / high * 480, y = 85 - i * 27;
+            if (shown) svg += `<path d="M${x} ${y + 5}V110" stroke="#1456a0" stroke-dasharray="4 3"/><circle cx="${x}" cy="110" r="6" fill="#1456a0"/><text x="${Math.min(465, Math.max(30, x - 20))}" y="${y}" font-size="20">${n}/${d}</text>`;
+          });
+          return visualFigure(svg, "Ganze stehen in gleichen Abständen. Ein Bruch liegt nach Zähler-vielen Schritten der Größe 1/Nenner. Brüche mit gleichem Wert liegen am selben Ort.");
+        } };
+        return [make("Bruchstreifen", "strip"), make("Kuchenstücke", "circle"), line];
+      }
+
+      function arithmeticVisualModels(a, b, operator, practice = false) {
+        if (!Number.isFinite(a) || !Number.isFinite(b)) return [];
+        const f = n => n.toLocaleString("de-DE", {maximumFractionDigits: 4});
+        const result = operator === "+" ? a + b : operator === "−" ? a - b : operator === "·" ? a * b : a / b;
+        const label = practice ? "?" : f(result);
+        const models = [];
+        if (operator === "+" || operator === "−") {
+          models.push({ name: "Rechenweg am Zahlenstrahl", draw: shown => {
+            const low = Math.min(0, a, result), high = Math.max(1, a, result);
+            const x = n => 45 + (n - low) / (high - low) * 465;
+            let svg = '<path d="M35 170H530" stroke="#344b65" stroke-width="3"/>';
+            for (let i = 0; i <= 4; i += 1) {
+              const n = low + i * (high - low) / 4;
+              svg += `<path d="M${x(n)} 165v10" stroke="#344b65"/><text x="${x(n) - 12}" y="205" font-size="17">${practice && n === result && n !== a ? "?" : f(n)}</text>`;
+            }
+            svg += `<circle cx="${x(a)}" cy="170" r="7" fill="#1456a0"/><text x="30" y="30" font-size="22">Start: ${f(a)} · ${operator === "+" ? "dazu" : "weg"}: ${f(b)}</text>`;
+            if (shown) svg += `<path d="M${x(a)} 145Q${(x(a) + x(result)) / 2} 45 ${x(result)} 145" fill="none" stroke="#25834f" stroke-width="4"/><path d="M${x(result) - 6} 136L${x(result)} 146L${x(result) + 6} 136" fill="none" stroke="#25834f" stroke-width="3"/><text x="${Math.min(465, Math.max(35, x(result) - 10))}" y="130" font-size="24">${label}</text>`;
+            return visualFigure(svg, `Blaue Markierung: Start. Der grüne Sprung zeigt die Änderung. ${operator === "+" ? b >= 0 ? "Die positive Änderung führt nach rechts." : "Die negative Änderung führt nach links." : "Eine positive Zahl abzuziehen führt nach links."} Die Skala ist gleichmäßig.`);
+          } });
+          if (a >= 0 && b >= 0 && result >= 0) models.push({ name: "Mengenbalken", draw: shown => {
+            const total = operator === "+" ? a + b : a, unit = 480 / Math.max(1, total);
+            const first = operator === "+" ? a : result, second = b;
+            const svg = `<rect x="35" y="80" width="${first * unit}" height="65" fill="#dcecfb" stroke="#344b65"/><rect x="${35 + first * unit}" y="80" width="${second * unit}" height="65" fill="${shown ? "#e1f1e8" : "#fff"}" stroke="#344b65"${operator === "−" ? ' stroke-dasharray="5 3"' : ""}/><text x="35" y="50" font-size="23">${operator === "+" ? `${f(a)} + ${f(b)}` : `${f(a)} insgesamt; ${f(b)} gehen weg`}</text><text x="35" y="190" font-size="22">${operator === "+" ? "Gesamte Menge" : "Übrige Menge"}: ${label}</text>`;
+            return visualFigure(svg, operator === "+" ? "Zwei aneinandergelegte Balken bilden zusammen die gesuchte Menge." : "Der gestrichelte Teil geht weg. Der blaue Teil bleibt. Die Balkenlängen stehen im selben Verhältnis wie die Mengen.");
+          } });
+        } else if (operator === "·" || operator === ":") {
+          if (Number.isInteger(a) && Number.isInteger(b) && a > 0 && b > 0 && (operator === "·" ? a * b : a) <= 240) {
+            models.push({ name: "Gruppen aus Plättchen", draw: shown => {
+              const count = operator === "·" ? a * b : a, columns = Math.min(20, Math.max(b, Math.ceil(count / 10)));
+              const rows = Math.ceil(count / columns), unit = Math.min(24, 440 / columns);
+              const svg = Array.from({length:count}, (_, i) => `<circle cx="${45 + i % columns * unit}" cy="${45 + Math.floor(i / columns) * unit}" r="${unit * .34}" fill="${shown && Math.floor(i / b) % 2 ? "#25834f" : "#2873b9"}" stroke="#17283f"/>`).join("");
+              return visualFigure(svg, operator === "·" ? `${a} Gruppen mit je ${b} Plättchen. Zähle in Gruppen statt einzeln. Beim Zeilenumbruch kann eine Gruppe in der nächsten Zeile weitergehen.` : `Packe immer ${b} Plättchen in eine Gruppe. Wie viele volle Gruppen und welche Reste entstehen? Beim Zeilenumbruch kann eine Gruppe weitergehen.`, rows * unit + 75);
+            } });
+          }
+          models.push({ name: "Mal und Geteilt als Umkehrung", draw: () => {
+            const svg = `<rect x="30" y="70" width="175" height="80" rx="12" fill="#dcecfb" stroke="#344b65"/><rect x="350" y="70" width="175" height="80" rx="12" fill="#e1f1e8" stroke="#344b65"/><path d="M215 85H340M340 130H215" stroke="#344b65" stroke-width="3"/><text x="50" y="120" font-size="27">${f(a)}</text><text x="370" y="120" font-size="27">${label}</text><text x="225" y="65" font-size="23">${operator} ${f(b)}</text><text x="225" y="165" font-size="23">${operator === "·" ? ":" : "·"} ${f(b)}</text>`;
+            return visualFigure(svg, `Vorwärts ${operator === "·" ? "multiplizieren" : "teilen"}, rückwärts ${operator === "·" ? "teilen" : "multiplizieren"}. Nutze die Umkehrung als Probe.`);
+          } });
+        }
+        return models;
+      }
+
+      function lessonVisualModels(kind, [a, b, c]) {
+        switch (kind) {
+          case "place": return [{ name: "Hunderterplatten, Zehnerstangen, Einer", draw: () => {
+            let svg = "";
+            for (let i = 0; i < a; i += 1) {
+              const x = 25 + i % 3 * 52, y = 35 + Math.floor(i / 3) * 52;
+              svg += `<rect x="${x}" y="${y}" width="44" height="44" fill="#dcecfb" stroke="#344b65"/>`;
+              for (let n = 1; n < 10; n += 1) svg += `<path d="M${x + n * 4.4} ${y}v44M${x} ${y + n * 4.4}h44" stroke="#7b9bbc" stroke-width=".5"/>`;
+            }
+            for (let i = 0; i < b; i += 1) {
+              svg += `<rect x="${215 + i * 12}" y="40" width="9" height="130" fill="#c8e6d5" stroke="#344b65"/>`;
+              for (let n = 1; n < 10; n += 1) svg += `<path d="M${215 + i * 12} ${40 + n * 13}h9" stroke="#344b65"/>`;
+            }
+            for (let i = 0; i < c; i += 1) svg += `<rect x="${385 + i % 3 * 35}" y="${40 + Math.floor(i / 3) * 35}" width="24" height="24" fill="#fce9be" stroke="#344b65"/>`;
+            svg += `<text x="25" y="215" font-size="19">${a} · 100</text><text x="215" y="215" font-size="19">${b} · 10</text><text x="385" y="215" font-size="19">${c} · 1</text>`;
+            return visualFigure(svg, "Eine Platte hat 100 kleine Felder, eine Stange 10, ein Einzelkästchen 1. Die drei Gruppen sind zur besseren Sicht unterschiedlich vergrößert, nicht im selben Maßstab.");
+          } }];
+          case "power": return [{ name: "Faktorenkette", draw: () => {
+            const svg = Array.from({length:b}, (_, i) => `<rect x="${30 + i * 125}" y="65" width="85" height="65" rx="9" fill="#dcecfb" stroke="#344b65"/><text x="${60 + i * 125}" y="107" font-size="28">${a}</text>${i < b - 1 ? `<text x="${125 + i * 125}" y="107" font-size="28">·</text>` : ""}`).join("") + `<text x="30" y="185" font-size="22">Der Exponent ${b} zählt diese ${b} gleichen Faktoren.</text>`;
+            return visualFigure(svg, "Jedes Kästchen steht für einen Faktor. Der Exponent sagt, wie viele dieser Kästchen miteinander multipliziert werden, nicht welche Zahl addiert wird.");
+          } }];
+          case "fraction": case "expand": return fractionVisualModels([[a, b]]);
+          case "compare": return fractionVisualModels([[a, 6], [b, 8]]);
+          case "fraction-sum": return fractionVisualModels([[a, 3], [b, 4]]);
+          case "fraction-product": return fractionVisualModels([[a, 4], [b, 3]]);
+          case "fraction-division": return fractionVisualModels([[a, 8], [b, 8]]);
+          case "fraction-operator": return fractionVisualModels([[a, 4]]);
+          case "decimal": case "percent": return fractionVisualModels([[a, 100]]);
+          case "addsub": return arithmeticVisualModels(a, b, c === 0 ? "+" : "−");
+          case "negative": return arithmeticVisualModels(a, b, "+");
+          case "multiply": return arithmeticVisualModels(a, b, "·");
+          case "divide": return arithmeticVisualModels(a, b, ":");
+          case "decimal-operation": return arithmeticVisualModels(a / 10, b / 10, c === 0 ? "·" : ":");
+          case "unknown": return arithmeticVisualModels(a, 5, "+");
+          case "angle": return [{ name: "Winkel mit Messskala", draw: () => {
+            const x = angle => 280 + 175 * Math.cos(angle * Math.PI / 180);
+            const y = angle => 210 - 175 * Math.sin(angle * Math.PI / 180);
+            let svg = '<path d="M105 210A175 175 0 0 1 455 210" fill="#f6faff" stroke="#344b65"/>';
+            for (let angle = 0; angle <= 180; angle += 10) {
+              const radius = angle % 30 ? 164 : 156;
+              svg += `<path d="M${x(angle)} ${y(angle)}L${280 + radius * Math.cos(angle * Math.PI / 180)} ${210 - radius * Math.sin(angle * Math.PI / 180)}" stroke="#344b65"/>`;
+              if (angle % 30 === 0) svg += `<text x="${280 + 205 * Math.cos(angle * Math.PI / 180) - 12}" y="${210 - 195 * Math.sin(angle * Math.PI / 180) + 5}" font-size="17">${angle}°</text>`;
+            }
+            svg += `<path d="M455 210H280L${x(a)} ${y(a)}" fill="none" stroke="#1456a0" stroke-width="4"/><circle cx="280" cy="210" r="5" fill="#17283f"/>`;
+            return visualFigure(svg, `Beginne rechts bei 0°. Lies gegen den Uhrzeigersinn bis zum beweglichen Schenkel: ${a}°. Der schwarze Punkt ist der Scheitel.`);
+          } }];
+          case "rectangle": return [{ name: "Rand und Innenfläche getrennt", draw: () => {
+            const svg = `<rect x="100" y="45" width="${a * 32}" height="${b * 18}" fill="#dcecfb" stroke="#25834f" stroke-width="6"/><text x="100" y="25" font-size="21">${a} Längeneinheiten</text><text x="15" y="85" font-size="20">${b}</text><text x="100" y="220" font-size="19">Innen: Fläche · Grüner Rand: Umfang</text>`;
+            return visualFigure(svg, "Fahre mit dem Finger einmal um den grünen Rand: Das ist der Umfang. Bedecke danach die blaue Innenfläche mit Einheitsquadraten: Das ist der Flächeninhalt.");
+          } }];
+          case "cube": return [{ name: "Sechs Außenflächen als Netz", draw: () => {
+            const unit = Math.min(26, 470 / (2 * a + 2 * b), 170 / (c + 2 * b));
+            const w = a * unit, d = b * unit, h = c * unit, x = 35, y = 35 + d;
+            const face = (left, top, width, height, label, fill) => `<rect x="${left}" y="${top}" width="${width}" height="${height}" fill="${fill}" stroke="#344b65"/><text x="${left + width / 2}" y="${top + height / 2 + 5}" text-anchor="middle" font-size="${Math.min(17, width / 4, height / 2)}">${label}</text>`;
+            const svg = face(x, y, w, h, `${a}·${c}`, "#dcecfb") + face(x + w, y, d, h, `${b}·${c}`, "#e1f1e8") + face(x + w + d, y, w, h, `${a}·${c}`, "#dcecfb") + face(x + 2 * w + d, y, d, h, `${b}·${c}`, "#e1f1e8") + face(x, y - d, w, d, `${a}·${b}`, "#fce9be") + face(x, y + h, w, d, `${a}·${b}`, "#fce9be");
+            return visualFigure(svg, "Je zwei Flächen haben dieselben Seitenlängen und dasselbe Muster aus Zahlen. Das Netz zählt die Außenflächen, nicht die Würfel im Inneren. Die Rechtecke sind maßstäblich zueinander.");
+          } }];
+          case "proportion": return [{ name: "Gleiche Preise pro Heft", draw: () => {
+            const row = (count, y) => Array.from({length:count}, (_, i) => `<rect x="${30 + i * 41}" y="${y}" width="36" height="48" rx="4" fill="#dcecfb" stroke="#344b65"/><text x="${35 + i * 41}" y="${y + 29}" font-size="15">${b} €</text>`).join("");
+            return visualFigure(row(a, 25) + row(c, 120), `Oben ${a} Hefte, unten ${c} Hefte. Jedes einzelne Heft kostet ${b} €. Gleiche Anzahlen enthalten gleich viele gleich teure Bausteine.`);
+          } }];
+          case "pattern": return [{ name: "Wertetabelle", draw: () => {
+            const svg = [0, 1, 2, 3, 4, 5].map((n, i) => `<rect x="${55 + i * 75}" y="50" width="75" height="60" fill="#dcecfb" stroke="#344b65"/><rect x="${55 + i * 75}" y="110" width="75" height="60" fill="#e1f1e8" stroke="#344b65"/><text x="${83 + i * 75}" y="88" font-size="24">${n}</text><text x="${83 + i * 75}" y="150" font-size="24">${a * n}</text>`).join("") + '<text x="20" y="88" font-size="20">x</text><text x="20" y="150" font-size="20">y</text>';
+            return visualFigure(svg, `Oben steht die Schrittnummer x, direkt darunter ihr Wert y. Jede Spalte ist ein Punkt im Diagramm. Hier gilt y = ${a} · x.`);
+          } }];
+          case "units": return [{ name: "Umrechnen in jeder Richtung", draw: () => {
+            const dimensions = b + 1;
+            const svg = Array.from({length:dimensions}, (_, i) => `<rect x="40" y="${25 + i * 60}" width="165" height="42" rx="6" fill="#dcecfb" stroke="#344b65"/><text x="55" y="${53 + i * 60}" font-size="21">Richtung ${i + 1}</text><text x="240" y="${53 + i * 60}" font-size="22">1 m = 10 dm</text>`).join("") + `<text x="40" y="235" font-size="22">Gesamtfaktor: ${Array.from({length:dimensions}, () => "10").join(" · ")} = ${10 ** dimensions}</text>`;
+            return visualFigure(svg, `Länge hat eine Richtung, Fläche zwei, Volumen drei. Bei ${a} m${b === 1 ? "²" : b === 2 ? "³" : ""} wird der Faktor ${10 ** dimensions} auf den ganzen Zahlwert angewendet.`);
+          } }];
+          case "data": case "statistics":
+            return [{ name: "Balken statt Säulen", draw: () => {
+              const scale = 360 / Math.max(1, a, b, c);
+              const svg = [a, b, c].map((n, i) => `<text x="20" y="${55 + i * 65}" font-size="20">${kind === "data" ? ["Zu Fuß", "Rad", "Bus"][i] : `Wert ${i + 1}`}</text><rect x="105" y="${30 + i * 65}" width="${n * scale}" height="35" fill="#dcecfb" stroke="#344b65"/><text x="${115 + n * scale}" y="${55 + i * 65}" font-size="20">${n}</text>`).join("");
+              return visualFigure(svg, "Dieselben Werte liegen jetzt waagerecht. Die Balken beginnen alle bei null. Doppelt so lange Balken bedeuten doppelt so große Werte.");
+            } }];
+          case "body": return [{ name: "Schrägbild statt Netz", draw: () => {
+            const model = experimentModel("cube", a === 1 ? [3, 3, 3] : [4, 3, 3]);
+            return visualFigure(model.svg, "Derselbe Körpertyp als Schrägbild. Beim Netz liegen die Flächen nebeneinander; beim Körper schließen sie den Innenraum ein. Dieses Bild ist eine Skizze, kein Messbild.");
+          } }];
+          default: return [];
+        }
+      }
+
+      function taskVisualModels(item) {
+        const fractions = [...item.question.matchAll(/(\d+)\/(\d+)/g)].map(match => [Number(match[1]), Number(match[2])]);
+        if (fractions.length) return fractionVisualModels(fractions.slice(0, 3));
+        const operation = item.question.match(/^Berechne(?: schriftlich)?:?\s*([−-]?\d+(?:,\d+)?)\s*([+−·:])\s*(\d+(?:,\d+)?)\.$/);
+        if (operation) return arithmeticVisualModels(Number(operation[1].replace("−", "-").replace(",", ".")), Number(operation[3].replace(",", ".")), operation[2], true);
+        if (item.kind === "power") return lessonVisualModels("power", item.values);
+        if (item.kind === "proportion") return lessonVisualModels("proportion", item.values);
+        if (item.kind === "data" || item.kind === "statistics") return lessonVisualModels(item.kind, item.values);
+        if (item.kind === "cube") return lessonVisualModels("cube", item.values);
+        if (item.kind === "negative") return arithmeticVisualModels(item.values[0], item.values[1], "+", true);
+        if (item.kind === "distance") return [{ name: "Entfernung auf dem Zahlenstrahl", draw: () => {
+          const scene = experimentModel("distance", item.values);
+          return visualFigure(scene.svg, "Zähle zuerst den Weg bis null, danach von null bis zum anderen Punkt. Addiere beide positiven Teilstrecken.");
+        } }];
+        if (item.interval) return [{ name: "Vergrößerter Zwischenraum", draw: () => {
+          const [low, high] = item.interval;
+          const f = n => n.toLocaleString("de-DE", { maximumFractionDigits: 3 });
+          let svg = '<path d="M40 125H520" stroke="#344b65" stroke-width="3"/>';
+          for (let i = 0; i <= 10; i += 1) svg += `<path d="M${40 + i * 48} 115v20" stroke="#344b65"/><text x="${25 + i * 48}" y="165" font-size="17">${i === 0 ? f(low) : i === 10 ? f(high) : "?"}</text>`;
+          return visualFigure(svg, "Der Zwischenraum wurde vergrößert und in zehn gleich große Abschnitte geteilt. Welche Zahlen gehören an die inneren Striche? Die beiden Randwerte sind nicht erlaubt.");
+        } }];
+        if (item.kind === "pattern" && item.showPattern) return lessonVisualModels("pattern", item.values);
+        if (item.kind === "scale") return [{ name: "Plan und Wirklichkeit", draw: () => {
+          const [length, code] = item.values, scale = [10, 50, 100, 200][code];
+          const svg = `<rect x="35" y="45" width="110" height="80" fill="#dcecfb" stroke="#344b65"/><text x="50" y="75" font-size="20">Plan</text><text x="50" y="110" font-size="23">${length} cm</text><path d="M165 85H335" stroke="#344b65" stroke-width="3"/><text x="190" y="65" font-size="23">· ${scale}</text><rect x="355" y="45" width="175" height="80" fill="#e1f1e8" stroke="#344b65"/><text x="370" y="75" font-size="20">Wirklichkeit</text><text x="370" y="110" font-size="23">? cm</text><text x="35" y="195" font-size="21">Erst gleiche Einheiten; danach cm in m umrechnen.</text>`;
+          return visualFigure(svg, `Maßstab 1 : ${scale}: Jeder Zentimeter auf dem Plan steht für ${scale} Zentimeter in der Wirklichkeit. Die Kästen sind Denkhilfen, keine maßstäblichen Strecken.`);
+        } }];
+        if (item.kind === "divisibility" || item.kind === "factors" || /durch [239] teilbar/.test(item.question)) {
+          const value = item.kind ? item.values[0] : Number(item.question.match(/\d+/)[0]);
+          return [{ name: "Ziffern einzeln ansehen", draw: () => {
+            const digits = String(value).split("");
+            const svg = digits.map((digit, i) => `<rect x="${40 + i * 140}" y="50" width="90" height="80" rx="8" fill="#dcecfb" stroke="#344b65"/><text x="${70 + i * 140}" y="102" font-size="32">${digit}</text>${i < digits.length - 1 ? `<text x="${140 + i * 140}" y="102" font-size="28">+</text>` : ""}`).join("") + '<text x="40" y="190" font-size="21">Ziffernsumme oder letzte Ziffer: Welche Regel passt?</text>';
+            return visualFigure(svg, "Die Quersumme addiert Ziffern, nicht ihre Stellenwerte. Sie hilft bei 3 und 9. Für 2, 5 und 10 prüfst du nur die letzte Ziffer. Für Primfaktoren brauchst du anschließend passende Divisionen.");
+          } }];
+        }
+        if (item.kind === "time") return [{ name: "Zeitweg über die volle Stunde", draw: () => {
+          const match = item.question.match(/(\d+):(\d+).*?(\d+):(\d+)/);
+          if (!match) throw new Error("Die Zeitaufgabe benötigt zwei Uhrzeiten.");
+          const from = Number(match[1]) * 60 + Number(match[2]), to = Number(match[3]) * 60 + Number(match[4]);
+          const hour = Math.ceil(from / 60) * 60, x = n => 40 + (n - from) / (to - from) * 470;
+          const svg = `<path d="M40 120H510" stroke="#344b65" stroke-width="3"/><path d="M40 95v50M${x(hour)} 95v50M510 95v50" stroke="#344b65"/><text x="25" y="175" font-size="22">${match[1]}:${match[2]}</text><text x="${x(hour) - 25}" y="70" font-size="22">${Math.floor(hour / 60)}:00</text><text x="475" y="175" font-size="22">${match[3]}:${match[4]}</text><text x="80" y="45" font-size="21">Erster Weg + zweiter Weg = gesamte Dauer</text>`;
+          return visualFigure(svg, "Teile den Weg an der vollen Stunde. Wie viele Minuten fehlen bis dahin? Wie viele kommen danach dazu? Eine Stunde hat 60 Minuten, nicht 100.");
+        } }];
+        const measure = item.question.match(/(\d+(?:,\d+)?)\s*(Kilogramm|kg|Meter|m³|m²|Liter|Stunden|Stunde)(?=\s|[?.]|$)/i);
+        if (measure) {
+          const unit = measure[2].toLocaleLowerCase("de-DE");
+          const conversions = {
+            kilogramm: ["1 kg", "1 000 g"], kg: ["1 kg", "1 000 g"],
+            meter: ["1 m", "100 cm"], liter: ["1 l", "1 000 ml"],
+            stunden: ["1 h", "60 min"], stunde: ["1 h", "60 min"],
+            "m²": ["1 m²", "100 dm²"], "m³": ["1 m³", "1 000 dm³"]
+          };
+          const [source, target] = conversions[unit];
+          return [{ name: "Einheiten-Brücke", draw: shown => {
+            const flow = document.createElement("div");
+            flow.className = "coach-flow";
+            [
+              ["Ausgangswert", `${measure[1]} ${measure[2]}`],
+              ["Die Brücke: erst EINE Einheit", shown ? `${source} entspricht ${target}. Prüfe, ob die Aufgabe diese Zieleinheit verlangt oder einen weiteren Umrechnungsschritt braucht.` : "Wie viele kleinere Einheiten passen in eine größere? Schiebe die Hilfe auf Schritt 1."],
+              ["Dann die ganze Menge", "Wende denselben Umrechnungsfaktor auf den Ausgangswert an. Kleinere Einheit → größerer Zahlwert. Größere Einheit → kleinerer Zahlwert."]
+            ].forEach(([title, text]) => {
+              const tile = document.createElement("div"); tile.className = "coach-tile";
+              const heading = document.createElement("strong"); heading.textContent = title;
+              const body = document.createElement("span"); body.textContent = text;
+              tile.append(heading, body); flow.append(tile);
+            });
+            return flow;
+          } }];
+        }
+        return [{ name: "Denkplan", draw: shown => {
+          const flow = document.createElement("div");
+          flow.className = "coach-flow";
+          const notes = [
+            ["1 · Gegeben", item.question],
+            ["2 · Gesucht", "Was soll im Antwortfeld stehen: eine Zahl, ein Bruch oder ein Wort? Unterstreiche die Frage."],
+            ["3 · Mein Weg", shown ? item.tips[Math.min(shown - 1, 2)] : "Überlege zuerst selbst. Mit dem Hilfe-Regler bekommst du den nächsten Denkanstoß."]
+          ];
+          notes.forEach(([title, text]) => {
+            const tile = document.createElement("div");
+            tile.className = "coach-tile";
+            const heading = document.createElement("strong"); heading.textContent = title;
+            const body = document.createElement("span"); body.textContent = text;
+            tile.append(heading, body); flow.append(tile);
+          });
+          return flow;
+        } }];
+      }
+
+      function experimentModel(kind, [a, b, c]) {
+        const f = value => value.toLocaleString("de-DE", { maximumFractionDigits: 4 });
+        const relation = (numerator, denominator) => {
+          let remainder = denominator / Number(gcd(BigInt(numerator), BigInt(denominator)));
+          while (remainder % 2 === 0) remainder /= 2;
+          while (remainder % 5 === 0) remainder /= 5;
+          return remainder === 1 ? "=" : "≈";
+        };
+        const text = (x, y, content, size = 20, color = "#17283f") => `<text x="${x}" y="${y}" font-family="system-ui,sans-serif" font-size="${size}" fill="${color}">${content}</text>`;
+        const rect = (x, y, w, h, color = "#dcecfb") => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color}" stroke="#344b65" stroke-width="1"/>`;
+        const line = (x1, y1, x2, y2, color = "#344b65", width = 2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="${width}"/>`;
+        const bar = (numerator, denominator, y, color = "#2873b9", label = "") => {
+          const segments = [];
+          for (let i = 0; i < denominator; i += 1) segments.push(rect(30 + i * 480 / denominator, y, 480 / denominator, 28, i < numerator ? color : "#f1f5fa"));
+          return segments.join("") + text(30, y + 53, label || `${numerator}/${denominator}`, 18);
+        };
+        const grid = (columns, rows, selected = columns * rows) => {
+          const unit = Math.min(25, 165 / rows, 280 / columns);
+          return Array.from({ length: columns * rows }, (_, i) => rect(30 + (i % columns) * unit, 45 + Math.floor(i / columns) * unit, unit, unit, i < selected ? "#2873b9" : "#f1f5fa")).join("");
+        };
+        const numberline = (start, finish, zoom = false) => {
+          const minimum = Math.min(start, finish), maximum = Math.max(start, finish);
+          const span = maximum - minimum;
+          const padding = zoom ? span / 10 : Math.max(1, span * 0.15);
+          const step = Math.max(1, Math.ceil((span + 2 * padding) / 8));
+          const low = zoom ? minimum - padding : Math.floor((minimum - padding) / step) * step;
+          const high = zoom ? maximum + padding : Math.ceil((maximum + padding) / step) * step;
+          const x = n => 45 + (n - low) / (high - low) * 465;
+          let svg = line(45, 120, 510, 120);
+          const marks = zoom ? [minimum, (minimum + maximum) / 2, maximum] : Array.from({length:Math.round((high - low) / step) + 1}, (_, i) => low + i * step);
+          for (const n of marks) svg += line(x(n), 114, x(n), 128) + text(x(n) - 10, 155, f(n), 18);
+          if (zoom) svg += `<circle cx="${x((minimum + maximum) / 2)}" cy="120" r="7" fill="#25834f"/>`;
+          return svg + line(x(start), 90, x(finish), 90, "#18774c", 5) +
+            `<circle cx="${x(start)}" cy="120" r="7" fill="#a06b12"/><circle cx="${x(finish)}" cy="120" r="7" fill="#1456a0"/>` +
+            text(30, 45, `Start ${f(start)} → Ziel ${f(finish)}`, 20);
+        };
+        const model = (svg, caption, ...steps) => ({ svg, caption, steps });
+        switch (kind) {
+          case "place":
+            return model(
+              ["Hunderter", "Zehner", "Einer"].map((name, i) => rect(35 + i * 160, 50, 145, 105) + text(45 + i * 160, 85, name, 17) + text(80 + i * 160, 125, [a, b, c][i], 28)).join(""),
+              "Stellenwerttafel mit Hundertern, Zehnern und Einern.",
+              `${a} Hunderter sind ${a * 100}.`, `${b} Zehner sind ${b * 10}.`, `${c} Einer sind ${c}. Zusammen: ${a * 100 + b * 10 + c}.`,
+              "Für größere Zahlen geht die Tafel weiter: Tausend, Million, Milliarde, Billion. Eine Billion ist 1 000 000 000 000.");
+          case "roman": {
+            let n = a, roman = "";
+            for (const [value, symbol] of [[40, "XL"], [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]]) {
+              while (n >= value) { roman += symbol; n -= value; }
+            }
+            return model(text(40, 85, a, 42) + text(160, 85, "=", 36) + text(215, 85, roman, 38) + text(40, 150, "I = 1 · V = 5 · X = 10 · L = 50", 22),
+              "Eine Zahl in dezimaler und römischer Schreibweise.",
+              `Unsere Zahl ist ${a}. Die Ziffern benutzen Stellenwerte.`, `Römische Schreibweise: ${roman}. IV bedeutet 5 − 1, IX bedeutet 10 − 1, XL bedeutet 50 − 10.`,
+              "Größere Zeichen: C = 100, D = 500, M = 1 000. Römische Zahlen haben keine Ziffer 0 als Platzhalter.");
+          }
+          case "round": {
+            const rounded = Math.round(a / 100) * 100;
+            const x = n => 40 + (n - 1200) * 4.7;
+            return model(line(40, 120, 510, 120) + [1200, 1250, 1300].map(n => line(x(n), 110, x(n), 130) + text(x(n) - 20, 160, n, 18)).join("") + `<circle cx="${x(a)}" cy="120" r="8" fill="#1456a0"/>`,
+              "Zahlenstrahl: 1 250 ist die Mitte zwischen 1 200 und 1 300.",
+              `${a} liegt zwischen 1 200 und 1 300.`, `Abstände: zu 1 200 sind es ${a - 1200}, zu 1 300 sind es ${1300 - a}.`,
+              a === 1250 ? "Genau in der Mitte gilt die Vereinbarung: aufrunden." : "Wähle den Hunderter, der näher liegt.", `Gerundet auf Hunderter: ${rounded}. Das ist ein Näherungswert, keine exakte Gleichheit.`);
+          }
+          case "density": {
+            const low = Math.min(a, b) / 10, high = Math.max(a, b) / 10;
+            if (low === high) return model(text(40, 90, "Wähle zwei verschiedene Werte."), "Zwei verschiedene Zahlen sind nötig.", "Gleiche Werte haben keinen Zwischenraum. Verändere einen Regler.");
+            const middle = (low + high) / 2;
+            return model(numberline(low, high, true) + text(100, 210, `Dazwischen: ${f(middle)}`, 22), "Vergrößerter Ausschnitt der Zahlengeraden. Grün liegt genau in der Mitte zwischen den Grenzen.",
+              `Die Grenzen sind ${f(low)} und ${f(high)}.`, `Addiere die Grenzen und teile durch 2: ${f(low + high)} : 2 = ${f(middle)}.`,
+              `Noch ein Zwischenwert: ${f((low + middle) / 2)}. Dieses Verfahren lässt sich immer wiederholen.`);
+          }
+          case "addsub": {
+            const result = c === 0 ? a + b : a - b;
+            return model(numberline(a, result), "Braun zeigt den Start; Blau das Ergebnis. Die grüne Verbindung zeigt die Änderung.",
+              `${a} ${c === 0 ? "+" : "−"} ${b} = ${result}.`,
+              c === 0 ? `Zerlege ${b} in ${Math.floor(b / 10) * 10} Zehnerwert und ${b % 10} Einer. Addiere sie nacheinander.` : `Zerlege ${b} in ${Math.floor(b / 10) * 10} und ${b % 10}. Ziehe die Teile nacheinander ab.`,
+              `Schriftlich: Einer und Zehner untereinander. Zehn Einer können zu einem Zehner gebündelt werden.`,
+              `Probe: ${result} ${c === 0 ? "−" : "+"} ${b} = ${a}.`);
+          }
+          case "multiply":
+            return model(grid(b, a), "Jedes Kästchen zählt 1; die Reihen sind gleich groß.",
+              `${a} Reihen mit je ${b} Kästchen ergeben ${a * b}.`,
+              `${a} · ${b} = ${Array.from({ length: a }, () => b).join(" + ")} = ${a * b}.`,
+              `Vertauschen: ${b} · ${a} = ${a * b}. Du zählst dieselben Kästchen nur anders.`,
+              `Schriftlich bei 236 · 14: 236 · 4 = 944; 236 · 10 = 2 360; beide Teilprodukte addieren: 3 304. Die Zehnerstelle darf nicht vergessen werden.`);
+          case "divide": {
+            const q = Math.floor(a / b), r = a % b;
+            const dots = Array.from({ length: a }, (_, i) => `<circle cx="${35 + (i % 10) * 43}" cy="${50 + Math.floor(i / 10) * 36}" r="12" fill="${i < q * b ? ["#2873b9", "#25834f"][Math.floor(i / b) % 2] : "#c28214"}"/>`).join("");
+            return model(dots, "Gleichfarbige Gruppen werden abwechselnd blau und grün markiert; gelb ist der Rest.",
+              `Wie viele Gruppen zu ${b} passen in ${a}? Es sind ${q} ganze Gruppen.`,
+              `Diese brauchen ${q} · ${b} = ${q * b}. Rest: ${a} − ${q * b} = ${r}.`,
+              `Probe: ${b} · ${q} + ${r} = ${a}. Der Rest ${r} ist kleiner als ${b}.`,
+              "Schriftlich bei 936 : 4: 9 : 4 → 2, Rest 1; 3 herunterholen → 13 : 4 → 3, Rest 1; 6 herunterholen → 16 : 4 → 4. Ergebnis 234. Durch 0 darfst du nie teilen.");
+          }
+          case "power":
+            return model(b === 2 ? grid(a, a) : text(30, 95, `${a} hoch ${b} = ${a ** b}`, 30), b === 2 ? "Das Quadrat hat gleich viele Reihen und Spalten." : "Der Exponent zählt die gleichen Faktoren.",
+              `Basis ${a}, Exponent ${b}.`, `${a} hoch ${b} = ${Array.from({ length: b }, () => a).join(" · ")} = ${a ** b}.`,
+              `Nicht verwechseln: ${a} · ${b} = ${a * b} ist eine andere Rechnung.`,
+              "Quadratzahlen 1² bis 15²: 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196, 225.");
+          case "order":
+            return model(text(25, 65, `${a} + ${b} · ${c} = ${a + b * c}`, 26) + text(25, 135, `(${a} + ${b}) · ${c} = ${(a + b) * c}`, 26), "Die Klammer verändert die Rechenanleitung.",
+              `Ohne Klammer zuerst ${b} · ${c} = ${b * c}, dann ${a} + ${b * c} = ${a + b * c}.`,
+              `Mit Klammer zuerst ${a} + ${b} = ${a + b}, dann ${a + b} · ${c} = ${(a + b) * c}.`,
+              "Bei derselben Rangstufe von links nach rechts: 24 : 6 · 2 = 4 · 2 = 8.");
+          case "divisibility": {
+            const sum = [...String(a)].reduce((s, n) => s + Number(n), 0);
+            return model(text(35, 70, `Zahl ${a}`, 30) + text(35, 120, `Quersumme: ${[...String(a)].join(" + ")} = ${sum}`, 24),
+              "Ziffern und Quersumme helfen bei den Teilbarkeitsregeln.",
+              `Durch 2: ${a % 2 === 0 ? "ja" : "nein"}; durch 5: ${a % 5 === 0 ? "ja" : "nein"}; durch 10: ${a % 10 === 0 ? "ja" : "nein"}. Schau auf die letzte Ziffer.`,
+              `Durch 3: ${sum % 3 === 0 ? "ja" : "nein"}; durch 9: ${sum % 9 === 0 ? "ja" : "nein"}. Schau auf die Quersumme ${sum}.`,
+              `Kontrolle zum Beispiel für 3: ${a} = 3 · ${Math.floor(a / 3)} + ${a % 3}.`);
+          }
+          case "factors": {
+            let n = a; const primes = [];
+            for (let p = 2; p <= n; p += 1) while (n % p === 0) { primes.push(p); n /= p; }
+            return model(primes.map((p, i) => rect(30 + i * 60, 70, 52, 55) + text(45 + i * 60, 105, p, 25)).join(""), "Kästchen zeigen die Primfaktoren.",
+              `${a} = ${primes.join(" · ")}.`, `Jeder Faktor ist eine Primzahl. ${primes.length === 1 ? `${a} ist selbst eine Primzahl.` : `${a} ist keine Primzahl, weil sie weitere Teiler besitzt.`}`,
+              "Kontrolliere die Zerlegung, indem du alle Faktoren wieder miteinander multiplizierst.");
+          }
+          case "common": {
+            const ta = Array.from({ length: a }, (_, i) => i + 1).filter(n => a % n === 0);
+            const tb = Array.from({ length: b }, (_, i) => i + 1).filter(n => b % n === 0);
+            const common = ta.filter(n => tb.includes(n)), g = Math.max(...common);
+            return model(text(25, 60, `Teiler von ${a}: ${ta.join(", ")}`, 20) + text(25, 105, `Teiler von ${b}: ${tb.join(", ")}`, 20) + text(25, 165, `Gemeinsam: ${common.join(", ")}`, 20),
+              "Zwei Teilerlisten zeigen gemeinsame Teiler.",
+              `Gemeinsame Teiler: ${common.join(", ")}. Der größte ist ${g}.`,
+              `kgV = ${a} · ${b} : ${g} = ${a * b / g}. Prüfe, dass ${a} und ${b} beide ohne Rest hineinpassen.`,
+              "Ein gemeinsamer Nenner muss nicht der kleinste sein; mit dem kleinsten werden die Zahlen oft einfacher.");
+          }
+          case "fraction": {
+            let svg = "";
+            const wholes = Math.max(1, Math.ceil(a / b));
+            const step = Math.min(68, 190 / wholes);
+            for (let i = 0; i < wholes; i += 1) {
+              const taken = Math.min(b, Math.max(0, a - i * b));
+              for (let piece = 0; piece < b; piece += 1) svg += rect(30 + piece * 360 / b, 25 + i * step, 360 / b, Math.min(28, step - 4), piece < taken ? "#2873b9" : "#f1f5fa");
+              svg += text(405, 45 + i * step, `Ganzes ${i + 1}`, 16);
+            }
+            return model(svg, "Jeder gleich lange Streifen ist ein Ganzes; jeder ist in gleich viele Stücke geteilt.",
+              `${a}/${b}: ${a} Stücke der Größe 1/${b}.`, `${b} Stücke ergeben ein Ganzes. Ganze: ${Math.floor(a / b)}; Reststücke: ${a % b}.`,
+              `${a}/${b} = ${Math.floor(a / b)} + ${a % b}/${b}. Der Nenner bezieht sich immer auf EIN Ganzes.`);
+          }
+          case "expand":
+            return model(bar(a, b, 35) + bar(a * c, b * c, 120, "#25834f"), "Beide Streifen sind gleich lang. Kleinere Stücke, derselbe gefärbte Anteil.",
+              `Aus ${a}/${b} wird durch Erweitern mit ${c} der Bruch ${a * c}/${b * c}.`,
+              `Zähler: ${a} · ${c}; Nenner: ${b} · ${c}. Die Menge bleibt gleich.`,
+              `Zum Zurückkürzen beide Zahlen durch ${c} teilen. Nur den Zähler zu ändern wäre ein anderer Anteil.`);
+          case "fraction-operator": {
+            let svg = "";
+            for (let group = 0; group < 4; group += 1) {
+              svg += rect(30 + group * 125, 25, 110, 185, group < a ? "#e1f1e8" : "#f1f5fa");
+              for (let i = 0; i < b; i += 1) svg += `<circle cx="${55 + group * 125 + i % 2 * 50}" cy="${55 + Math.floor(i / 2) * 40}" r="12" fill="${group < a ? "#25834f" : "#a1b8cd"}"/>`;
+            }
+            return model(svg, "Vier gleich große Gruppen bilden die Gesamtmenge. Grüne Gruppen sind ausgewählt.",
+              `Gesamtmenge: 4 · ${b} = ${4 * b} Dinge.`,
+              `Ein Viertel: ${4 * b} : 4 = ${b} Dinge.`,
+              `${a}/4 von ${4 * b} = ${a} · ${b} = ${a * b} Dinge.`,
+              `Als Bruchrechnung: ${a}/4 · ${4 * b} = ${a * 4 * b}/4 = ${a * b}. Erst durch den Nenner teilen, dann mit dem Zähler multiplizieren.`);
+          }
+          case "compare": {
+            const diff = a / 6 - b / 8;
+            return model(bar(a, 6, 35) + bar(b, 8, 120, "#25834f"), "Gleich lange Ganze machen den Vergleich fair.",
+              `${a}/6 = ${a * 4}/24 und ${b}/8 = ${b * 3}/24.`,
+              `Nun sind die Stücke gleich groß: ${a * 4} und ${b * 3} vergleichen.`,
+              `${a}/6 ist ${Math.abs(diff) < 1e-10 ? "gleich groß wie" : diff > 0 ? "größer als" : "kleiner als"} ${b}/8.`);
+          }
+          case "fraction-sum": {
+            const sum = a * 4 + (c === 0 ? b * 3 : -b * 3);
+            return model(bar(a * 4, 12, 25, "#2873b9", `${a}/3 = ${a * 4}/12`) + bar(b * 3, 12, 115, "#25834f", `${b}/4 = ${b * 3}/12`),
+              "Drittel und Viertel werden zu gleich großen Zwölfteln.",
+              `Erweitere ${a}/3 mit 4 → ${a * 4}/12; ${b}/4 mit 3 → ${b * 3}/12.`,
+              `Zähler ${c === 0 ? "addieren" : "subtrahieren"}: ${a * 4} ${c === 0 ? "+" : "−"} ${b * 3} = ${sum}.`,
+              `Ergebnis: ${sum}/12. Stückgröße bleibt ein Zwölftel. ${sum < 0 ? "Dieses Ergebnis ist negativ und geht über das Rechnen mit positiven Brüchen hinaus." : "Kürze anschließend, wenn ein gemeinsamer Teiler vorhanden ist."}`);
+          }
+          case "fraction-product": {
+            const cells = Array.from({ length: 12 }, (_, i) => {
+              const x = i % 4, y = Math.floor(i / 4);
+              return rect(55 + x * 75, 35 + y * 50, 75, 50, x < a && y < b ? "#18774c" : x < a ? "#c2d9ef" : "#f1f5fa");
+            }).join("");
+            return model(cells, "Blau markiert den ersten Anteil; Grün zeigt den Anteil davon.",
+              `Zuerst ${a}/4 der Fläche auswählen.`, `Davon ${b}/3 nehmen: ${a * b} von 12 kleinen Rechtecken.`,
+              `${a}/4 · ${b}/3 = ${a * b}/12. Ein Anteil kleiner als 1 macht das Produkt kleiner.`);
+          }
+          case "fraction-division":
+            return model(bar(a, 8, 45, "#2873b9") + bar(b, 8, 135, "#25834f"), "Oben ist die zu teilende Menge; unten die Größe eines einzelnen Stücks.",
+              `Gesucht: Wie oft passt ${b}/8 in ${a}/8?`,
+              `Beide Mengen sind Achtel. Deshalb kannst du ${a} : ${b} rechnen: ${a} : ${b} ${relation(a, b)} ${f(a / b)}${relation(a, b) === "≈" ? " (gerundet)" : ""}.`,
+              `Mit Kehrwert: ${a}/8 · 8/${b} = ${a}/${b}. Bei b = 1 wird aus ${a}/8 : 1/8 die Zahl ${a}.`);
+          case "decimal":
+            return model(grid(10, 10, a), "Ein Ganzes aus 100 Kästchen; jedes Kästchen ist ein Hundertstel.",
+              `${a} Hundertstel sind ${a}/100 = ${f(a / 100)}.`,
+              `${Math.floor(a / 10)} volle Zehntelreihen und ${a % 10} weitere Hundertstel.`,
+              `Ergänzte Nullen ändern den Wert nicht: 0,70 = 0,7. Aber 0,07 ist zehnmal kleiner.`);
+          case "decimal-operation": {
+            const first = a / 10, second = b / 10;
+            return model(text(30, 70, `${f(first)} ${c === 0 ? "·" : ":"} ${f(second)}`, 32) + text(30, 140, c === 0 ? `${a} · ${b} Hundertstel` : `${a} : ${b}`, 28),
+              "Die Einheiten Zehntel und Hundertstel erklären die Kommastelle.",
+              c === 0 ? `Rechne ohne Komma: ${a} · ${b} = ${a * b}.` : `Beide Zahlen mal 10: ${f(first)} : ${f(second)} = ${a} : ${b}.`,
+              c === 0 ? "Zehntel mal Zehntel sind Hundertstel. Das Produkt wird also durch 100 geteilt." : "Beide Mengen wurden gleich stark vergrößert. Das Verhältnis bleibt unverändert.",
+              `Ergebnis ${c === 0 ? "=" : relation(a, b)} ${f(c === 0 ? first * second : first / second)}${c !== 0 && relation(a, b) === "≈" ? " (gerundet)" : ""}.`);
+          }
+          case "periodic": {
+            const divisor = [3, 4, 6, 8][a];
+            let rest = 1; const seen = new Map(), digits = [], work = [];
+            while (rest && !seen.has(rest)) {
+              seen.set(rest, digits.length);
+              const current = rest * 10, digit = Math.floor(current / divisor);
+              rest = current % divisor; digits.push(digit);
+              work.push(`${current} : ${divisor} → ${digit}, Rest ${rest}`);
+            }
+            const periodStart = rest ? seen.get(rest) : -1;
+            const writing = periodStart < 0 ? `0,${digits.join("")}` : `0,${digits.slice(0, periodStart).join("")}(${digits.slice(periodStart).join("")})`;
+            return model(text(35, 75, `1 : ${divisor} = ${writing}`, 30) + text(35, 140, rest ? "Gleicher Rest → gleiche nächste Ziffer" : "Rest 0 → Division endet", 21),
+              "Ziffern in Klammern wiederholen sich unendlich; die Klammern sind hier eine Periodenschreibweise.",
+              `Starte mit 1 : ${divisor}. Ergänze eine Nachkommastelle durch Herunterholen einer 0.`,
+              ...work,
+              rest ? `Rest ${rest} tritt wieder auf. Ab hier wiederholen sich die Ziffern: ${writing}.` : `Kein Rest mehr: ${writing} ist eine abbrechende Dezimalzahl.`);
+          }
+          case "negative":
+            return model(numberline(a, a + b), "Braun zeigt die Starttemperatur; Blau die neue Temperatur.",
+              `Start: ${a} °C; Änderung: ${b >= 0 ? "+" : ""}${b} °C.`,
+              `${Math.abs(b)} Schritte ${b >= 0 ? "nach rechts" : "nach links"} → ${a + b} °C.`,
+              a + b < 0 ? "Die Temperatur ist trotz Änderung noch unter dem Gefrierpunkt." : "Die Temperatur ist jetzt bei oder über 0 °C.");
+          case "distance":
+            return model(numberline(a, b), "Die Verbindung zwischen zwei Punkten zeigt eine Entfernung, nicht eine negative Zahl.",
+              `Abstand von ${a} zur Null: ${Math.abs(a)}. Von ${b} zur Null: ${Math.abs(b)}.`,
+              `Abstand zwischen den Punkten: ${Math.abs(b - a)}.`,
+              "Abstände sind nicht negativ. Zwei Gegenzahlen liegen gleich weit links und rechts von 0.");
+          case "measure": {
+            let svg = rect(40, 95, 460, 35, "#fff4d4") + rect(40, 65, a * 42, 18, "#2873b9");
+            for (let i = 0; i <= 10; i += 1) svg += line(40 + i * 42, 95, 40 + i * 42, 113) + text(35 + i * 42, 151, i, 16);
+            return model(svg, "Das blaue Objekt beginnt am Nullstrich des Zentimeter-Lineals.",
+              `Das Objekt endet beim Strich ${a}. Die Länge beträgt ${a} cm.`,
+              "Lies nicht vom Linealrand aus, sondern vom Nullstrich. Beginnt ein Objekt bei 2 cm und endet bei 8 cm, ist es 8 − 2 = 6 cm lang.",
+              "Ein Messwert enthält immer Zahl und Einheit. Kleine Messfehler sind normal; nenne ein sinnvolles Maß.");
+          }
+          case "units": {
+            const dimension = b + 1, factor = 100 ** dimension;
+            const unit = ["m", "m²", "m³"][b], target = ["cm", "cm²", "cm³"][b];
+            return model(b === 0 ? line(40, 100, 430, 100, "#1456a0", 5) + text(40, 150, "100 cm", 24) : b === 1 ? rect(60, 35, 180, 180) + text(255, 125, "100 × 100", 24) : rect(80, 75, 140, 120) + line(80, 75, 125, 35) + line(220, 75, 265, 35) + line(125, 35, 265, 35) + line(265, 35, 265, 155) + line(220, 195, 265, 155) + text(285, 125, "100 × 100 × 100", 18),
+              `${dimension} Messrichtung${dimension === 1 ? "" : "en"}: bei jeder wird Meter in Zentimeter umgerechnet.`,
+              `1 ${unit} = ${f(factor)} ${target}. Der Faktor ist ${Array(dimension).fill(100).join(" · ")}.`,
+              `${a} ${unit} = ${f(a * factor)} ${target}.`,
+              "Weitere wichtige Umrechnungen: 1 kg = 1 000 g; 1 l = 1 000 ml = 1 dm³; 1 € = 100 ct; 1 h = 60 min; 1 ha = 10 000 m².");
+          }
+          case "time": {
+            const start = 9 * 60 + a, finish = start + b;
+            const clock = t => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+            return model(text(35, 80, `${clock(start)} → ${clock(finish)}`, 34) + text(35, 145, `Dauer: ${b} min`, 30),
+              "Eine Zeitspanne wird in Minuten berechnet; die Uhrzeit verwendet 60 Minuten pro Stunde.",
+              `Start ${clock(start)} = ${start} Minuten nach Mitternacht.`, `Addiere die Dauer: ${start} + ${b} = ${finish} Minuten.`,
+              `Teile durch 60: ${Math.floor(finish / 60)} ganze Stunden, Rest ${finish % 60} Minuten → ${clock(finish)}.`);
+          }
+          case "percent":
+            return model(grid(10, 10, a), "100 Kästchen sind das Ganze; die gefärbten Kästchen zeigen den Prozentsatz.",
+              `${a} % = ${a}/100 = ${f(a / 100)}.`, `Der Anteil von ${b} ist ${b} · ${f(a / 100)} = ${f(a * b / 100)}.`,
+              "Das Bild zeigt den Anteil, nicht automatisch die Anzahl der Dinge: Dieselben 25 % sind bei 80 Dingen 20, bei 40 Dingen nur 10.");
+          case "proportion":
+            return model(text(30, 55, `${a} Hefte → ${a * b} €`, 26) + text(30, 115, `1 Heft → ${b} €`, 26) + text(30, 175, `${c} Hefte → ${c * b} €`, 26),
+              "Dreisatz: erst durch die bekannte Anzahl teilen, dann mit der gesuchten Anzahl multiplizieren.",
+              `Bekannt: ${a} Hefte kosten ${a * b} €.`, `Ein Heft: ${a * b} € : ${a} = ${b} €.`,
+              `${c} Hefte: ${b} € · ${c} = ${c * b} €.`,
+              "Das gilt nur bei gleichem Stückpreis ohne feste Zusatzgebühr. Alter und Körpergröße sind zum Beispiel nicht proportional.");
+          case "scale": {
+            const scale = [10, 50, 100, 200][b];
+            return model(line(45, 80, 45 + a * 40, 80, "#1456a0", 5) + text(45, 130, `Bild: ${a} cm`, 24) + text(45, 190, `Maßstab 1 : ${scale}`, 24),
+              "Die blaue Strecke ist die Bildlänge. Der Maßstab ordnet ihr eine Originallänge zu.",
+              `1 cm im Bild entspricht ${scale} cm im Original.`, `${a} cm im Bild → ${a} · ${scale} = ${a * scale} cm.`,
+              `In Meter: ${a * scale} : 100 = ${f(a * scale / 100)} m. Umgekehrt teilst du die Originallänge durch ${scale}.`);
+          }
+          case "pattern": {
+            let svg = line(50, 200, 500, 200) + line(50, 200, 50, 30) + text(510, 205, "x", 17) + text(45, 22, "y", 17);
+            for (let n = 0; n <= 5 * a; n += a) svg += line(45, 200 - n * 6, 50, 200 - n * 6) + text(15, 205 - n * 6, n, 14);
+            for (let i = 0; i <= 5; i += 1) svg += `<circle cx="${50 + i * 80}" cy="${200 - i * a * 6}" r="6" fill="#1456a0"/>` + text(45 + i * 80, 225, i, 16);
+            return model(svg, `x zählt Schritte von 0 bis 5; y zeigt den Wert. Zwischen zwei y-Markierungen liegen ${a} Einheiten.`,
+              `Regel: Wert = Schrittnummer · ${a}.`, `Wertetabelle: 0 → 0; 1 → ${a}; 2 → ${2 * a}; 3 → ${3 * a}; 4 → ${4 * a}; 5 → ${5 * a}.`,
+              `Jeder weitere Schritt erhöht den Wert um ${a}. Im Bild liegen die Werte auf einer Geraden.`);
+          }
+          case "story":
+            return model(Array.from({ length: a }, (_, i) => rect(30 + i * 75, 45, 65, 55) + text(35 + i * 75, 80, `${b} €`, 20)).join("") + rect(30, 135, 170, 50, "#fce9be") + text(40, 167, `Fahrt: ${c} €`, 20),
+              "Jede Karte hat einen eigenen Preis; die Fahrt wird nur einmal bezahlt.",
+              `Gesucht: Gesamtkosten für ${a} Karten und eine Fahrt.`, `Kartenkosten: ${a} · ${b} € = ${a * b} €.`,
+              `Fahrt hinzufügen: ${a * b} € + ${c} € = ${a * b + c} €.`,
+              `Antwort: Insgesamt sind es ${a * b + c} €. Die Rechnung ${a} · (${b} + ${c}) würde die Fahrt ${a}-mal bezahlen.`);
+          case "unknown":
+            return model(rect(35, 50, 160, 65) + text(50, 92, `x + 5 = ${a + 5}`, 24) + text(35, 175, "Prüfziel: x + 5 = 12", 26),
+              "Der Regler setzt eine mögliche Zahl für x ein.",
+              `Versuch x = ${a}: ${a} + 5 = ${a + 5}.`, a === 7 ? "Das passt! Die gesuchte Zahl ist 7." : `Es fehlen oder bleiben ${Math.abs(12 - (a + 5))}; verändere x.`,
+              "Rückwärts: 12 − 5 = 7. Probe: 7 + 5 = 12.");
+          case "angle": {
+            const r = a * Math.PI / 180, x = 280 + 160 * Math.cos(r), y = 205 - 160 * Math.sin(r);
+            return model(line(280, 205, 475, 205) + line(280, 205, x, y, "#1456a0", 4) + `<path d="M335 205 A55 55 0 0 0 ${280 + 55 * Math.cos(r)} ${205 - 55 * Math.sin(r)}" fill="none" stroke="#b97a10" stroke-width="3"/>` + text(25, 38, `${a}°`, 28),
+              "Beide Schenkel beginnen am selben Scheitel. Die Drehung ist der Winkel.",
+              a < 90 ? `${a}° ist spitz.` : a === 90 ? "90° ist ein rechter Winkel." : a < 180 ? `${a}° ist stumpf.` : "180° ist ein gestreckter Winkel.",
+              "Beim Messen: Scheitel auf den Mittelpunkt, ein Schenkel auf die Grundlinie.", "Lies auf der Skala ab, die am Grundschenkel mit 0 beginnt. Die andere Skala zeigt sonst den falschen Winkel.");
+          }
+          case "parallel": {
+            const endpoint = 280 + a * 30, length = Math.sqrt(3 * 3 + a * a);
+            return model(line(40, 190, 520, 190) + line(40, 155, 520, 155, "#a1b8cd") + line(280, 100, endpoint, 190, "#1456a0", 4) + line(280, 100, 280, 190, "#25834f", 2) + `<circle cx="280" cy="100" r="7" fill="#1456a0"/>`,
+              "Grün ist die Senkrechte; Blau eine mögliche schrägere Verbindung. Die zwei waagerechten Geraden sind parallel.",
+              "Der senkrechte Abstand ist hier 3 Einheiten.", `Die blaue Verbindung ist ${a === 0 ? "" : "ungefähr "}${f(length)} Einheiten lang.`,
+              a === 0 ? "Senkrecht ist die Verbindung am kürzesten. Nur diese Länge nennt man den Abstand." : "Die schräge Verbindung ist länger als die Senkrechte.");
+          }
+          case "circle":
+            return model(`<circle cx="280" cy="125" r="${a * 20}" fill="#e9f2fc" stroke="#1456a0" stroke-width="3"/>` + line(280 - a * 20, 125, 280 + a * 20, 125) + line(280, 125, 280, 125 - a * 20, "#25834f", 3) + `<circle cx="280" cy="125" r="4" fill="#17283f"/>`,
+              "Grün: Radius vom Mittelpunkt zum Rand. Waagerecht: Durchmesser von Rand zu Rand durch die Mitte.",
+              `Radius r = ${a} cm.`, `Durchmesser d = 2 · ${a} = ${2 * a} cm.`,
+              `Zum Zeichnen den Zirkel ${a} cm öffnen. Die Spitze bleibt auf dem Mittelpunkt.`);
+          case "symmetry": {
+            const x = n => 280 + n * 40, y = n => 125 - n * 23;
+            const bx = -a, by = c === 0 ? b : -b;
+            let svg = line(40, 125, 520, 125) + line(280, 15, 280, 235);
+            for (let n = -4; n <= 4; n += 1) svg += text(x(n) - 5, 145, n, 14);
+            for (let n = -4; n <= 4; n += 1) if (n !== 0) svg += line(275, y(n), 285, y(n)) + text(255, y(n) + 5, n, 14);
+            svg += `<circle cx="${x(a)}" cy="${y(b)}" r="7" fill="#1456a0"/><circle cx="${x(bx)}" cy="${y(by)}" r="7" fill="#25834f"/>` +
+              text(x(a) - 20, y(b) - 12, `P(${a}|${b})`, 17) + text(x(bx) - 25, y(by) - 12, `P′(${bx}|${by})`, 17);
+            return model(svg, "Blau ist der Ausgangspunkt; Grün der Spiegelpunkt. Die schwarze Mitte ist der Ursprung.",
+              `P = (${a} | ${b}). Zuerst x waagerecht, dann y senkrecht.`,
+              c === 0 ? "Spiegle an der y-Achse: x wechselt das Vorzeichen, y bleibt." : "Spiegle am Ursprung: Beide Koordinaten wechseln das Vorzeichen.",
+              `Bildpunkt P′ = (${bx} | ${by}). Die Abstände zur Achse bzw. zum Zentrum sind gleich.`);
+          }
+          case "body": {
+            const w = a === 0 ? 70 : 55, h = 55;
+            const net = [[30, 85, w, h], [30 + w, 85, h, h], [30 + w + h, 85, w, h], [30 + 2 * w + h, 85, h, h], [30, 30, w, h], [30, 140, w, h]].map(values => rect(...values)).join("");
+            return model(net + rect(360, 35, w, h) + rect(360, 145, w, h),
+              "Links: aufgeklapptes Netz. Rechts: Grundriss oben und Aufriss unten (hier gleiche Höhe und Tiefe).",
+              a === 0 ? "Ein Quader hat 6 Rechteckflächen, 12 Kanten und 8 Ecken. Gegenüberliegende Flächen sind gleich groß." : "Ein Würfel hat 6 gleiche Quadratflächen, 12 gleich lange Kanten und 8 Ecken.",
+              "Falte das Netz: die vier Flächen in der Reihe bilden die Seiten; die zwei angefügten Flächen schließen oben und unten.",
+              "Grundriss ist der Blick von oben, Aufriss der Blick von vorn. Diese Ansichten zeigen echte Längen; ein Schrägbild verkürzt die nach hinten laufenden Kanten.");
+          }
+          case "solid-types": {
+            const shapes = [
+              `<path d="M140 185L235 185L185 75ZM140 185L250 150L295 40L185 75M235 185L345 150L295 40M250 150H345" fill="#dcecfb" stroke="#344b65" stroke-width="3"/>`,
+              `<path d="M135 190L260 215L380 175L260 55ZM135 190L260 55L260 215M260 55L380 175" fill="#dcecfb" stroke="#344b65" stroke-width="3"/>`,
+              `<path d="M165 60V190C165 225 365 225 365 190V60" fill="#dcecfb" stroke="#344b65" stroke-width="3"/><ellipse cx="265" cy="60" rx="100" ry="28" fill="#e1f1e8" stroke="#344b65" stroke-width="3"/>`,
+              `<path d="M160 185L265 35L370 185" fill="#dcecfb" stroke="#344b65" stroke-width="3"/><ellipse cx="265" cy="185" rx="105" ry="28" fill="#e1f1e8" stroke="#344b65" stroke-width="3"/>`,
+              `<circle cx="265" cy="125" r="95" fill="#dcecfb" stroke="#344b65" stroke-width="3"/><ellipse cx="265" cy="125" rx="95" ry="28" fill="none" stroke="#a1b8cd" stroke-dasharray="6 5"/>`
+            ];
+            const names = ["Prisma", "Pyramide", "Zylinder", "Kegel", "Kugel"];
+            const properties = ["Hier ein Dreiecksprisma: zwei gleiche, parallele Dreiecke und drei Rechtecke.", "Hier eine Pyramide mit viereckiger Grundfläche und vier dreieckigen Seitenflächen.", "Zwei Kreisflächen und ein gekrümmter Mantel. Keine Spitze.", "Eine Kreisfläche, ein gekrümmter Mantel und eine Spitze.", "Nur eine gekrümmte Oberfläche; keine Ecken, keine Kanten."];
+            const examples = ["eine dreieckige Verpackung", "eine ägyptische Pyramide", "eine Konservendose", "eine Eistüte", "ein Ball"];
+            return model(shapes[a], `Schrägansicht: ${names[a]}. Verdeckte Kanten sind teilweise weggelassen.`,
+              properties[a], `Alltagsbeispiel: ${examples[a]}.`, "Vergleiche die Grundflächen und prüfe, ob eine Spitze oder ein gekrümmter Mantel vorhanden ist.");
+          }
+          case "rectangle":
+            return model(grid(a, b) + text(315, 70, `U = ${2 * (a + b)}`, 24) + text(315, 120, `A = ${a * b}`, 24),
+              "Innen sind Einheitsquadrate. Der Rand besteht aus zwei langen und zwei kurzen Seiten.",
+              `Umfang: ${a} + ${b} + ${a} + ${b} = ${2 * (a + b)} Längeneinheiten.`,
+              `Fläche: ${b} Reihen mit ${a} Quadraten = ${a * b} Flächeneinheiten.`,
+              "Bei Zentimeter-Seiten ist der Umfang in cm und die Fläche in cm². Quadratzentimeter zählt Quadrate, nicht Randstücke.");
+          case "compound": {
+            let svg = "";
+            for (let row = 0; row < 4; row += 1) for (let col = 0; col < 6; col += 1) {
+              const missing = col >= 6 - a && row < b;
+              svg += rect(60 + col * 40, 35 + row * 40, 40, 40, missing ? "#fff4d4" : "#dcecfb");
+            }
+            return model(svg, "Blau ist die L-Fläche, Gelb die herausgenommene rechteckige Aussparung.",
+              "Das ganze Rechteck hat 6 · 4 = 24 Flächeneinheiten.",
+              `Die Aussparung hat ${a} · ${b} = ${a * b} Flächeneinheiten.`,
+              `Restfläche: 24 − ${a * b} = ${24 - a * b}. Der Umfang bleibt bei dieser Eck-Aussparung 20 Längeneinheiten: wegfallende Randstrecken werden durch gleich lange Innenrandstrecken ersetzt.`);
+          }
+          case "cube": {
+            const width = a * 28, height = c * 25, depth = b * 12;
+            const front = rect(80, 80, width, height);
+            const outline = line(80, 80, 80 + depth, 80 - depth) + line(80 + width, 80, 80 + width + depth, 80 - depth) + line(80 + depth, 80 - depth, 80 + width + depth, 80 - depth) + line(80 + width + depth, 80 - depth, 80 + width + depth, 80 + height - depth) + line(80 + width, 80 + height, 80 + width + depth, 80 + height - depth);
+            return model(front + outline + text(310, 65, `l=${a}, b=${b}, h=${c}`, 21) + text(310, 110, `V = ${a * b * c}`, 24) + text(310, 155, `O = ${2 * (a * b + a * c + b * c)}`, 24),
+              "Schrägbild eines Quaders: vorne Länge und Höhe; die schrägen Kanten zeigen die Tiefe.",
+              `Eine Schicht: ${a} · ${b} = ${a * b} Einheitswürfel.`, `${c} Schichten: V = ${a * b} · ${c} = ${a * b * c} Kubikeinheiten.`,
+              `Außenflächen paarweise: 2 · (${a * b} + ${a * c} + ${b * c}) = ${2 * (a * b + a * c + b * c)} Quadrateinheiten.`,
+              "Bei zusammengesetzten Quadern addierst du Volumina. Für die Oberfläche zählen gemeinsame Kontaktflächen nicht: Sie liegen innen.");
+          }
+          case "data": {
+            const total = a + b + c;
+            return model([a, b, c].map((n, i) => rect(50 + i * 150, 200 - n * 12, 85, n * 12) + text(50 + i * 150, 225, ["Zu Fuß", "Rad", "Bus"][i], 18) + text(70 + i * 150, 185 - n * 12, n, 20)).join(""),
+              "Säulen zeigen die Anzahl der Befragten je Schulweg. Alle Säulen nutzen dieselbe Skala.",
+              `Gesamtzahl: ${a} + ${b} + ${c} = ${total}.`,
+              `Zu Fuß: ${a} Personen = ${a}/${total} ≈ ${f(a / total * 100)} %.`,
+              `Rad: ${f(b / total * 100)} %; Bus: ${f(c / total * 100)} %. Zusammen ergeben ungerundete Anteile 100 %.`,
+              "Die Aussage gilt zunächst für diese Befragten, nicht automatisch für die ganze Schule.");
+          }
+          case "chart": {
+            const values = [4, 3, 3], colors = ["#2873b9", "#25834f", "#b87913"];
+            let svg = "";
+            if (a === 0) svg = values.map((n, i) => rect(70 + i * 140, 180 - n * 30, 75, n * 30, colors[i]) + text(75 + i * 140, 212, `${n}`, 22)).join("");
+            if (a === 1) svg = values.map((n, i) => rect(130, 35 + i * 55, n * 70, 35, colors[i]) + text(45, 60 + i * 55, `${n}`, 22)).join("");
+            if (a === 2) {
+              let start = -Math.PI / 2;
+              svg = values.map((n, i) => {
+                const end = start + n / 10 * 2 * Math.PI;
+                const path = `<path d="M280 125L${280 + 95 * Math.cos(start)} ${125 + 95 * Math.sin(start)}A95 95 0 0 1 ${280 + 95 * Math.cos(end)} ${125 + 95 * Math.sin(end)}Z" fill="${colors[i]}" stroke="white"/>`;
+                start = end; return path;
+              }).join("");
+            }
+            if (a === 3) { let x = 30; svg = values.map((n, i) => { const out = rect(x, 75, n * 48, 55, colors[i]); x += n * 48; return out; }).join(""); }
+            return model(svg, "Daten: Blau = 4 (40 %), Grün = 3 (30 %), Gelb = 3 (30 %). Dieselben Daten in anderer Darstellung.",
+              "Gesamtzahl 10; relative Häufigkeiten 4/10, 3/10 und 3/10.",
+              a === 2 ? "Kreiswinkel: 40 % · 360° = 144°; 30 % · 360° = 108°." : "Die dargestellten Mengen bleiben 4, 3 und 3. Nur die Darstellung wechselt.",
+              "Vergleiche die größte Kategorie und die zwei gleichen Kategorien. Ein sinnvolles Diagramm benennt außerdem Thema, Kategorien und Einheit.");
+          }
+          case "statistics":
+            return model([a, b, c].map((n, i) => rect(65 + i * 145, 200 - n * 8, 70, n * 8) + text(75 + i * 145, 228, n, 22)).join(""),
+              "Drei Säulen zeigen drei Einzelwerte auf derselben Skala.",
+              `Minimum ${Math.min(a, b, c)}, Maximum ${Math.max(a, b, c)}.`,
+              `Spannweite: ${Math.max(a, b, c)} − ${Math.min(a, b, c)} = ${Math.max(a, b, c) - Math.min(a, b, c)}.`,
+              `Mittelwert: (${a} + ${b} + ${c}) : 3 ${relation(a + b + c, 3)} ${f((a + b + c) / 3)}${relation(a + b + c, 3) === "≈" ? " (gerundet)" : ""}.`,
+              "Ein großer Einzelwert zieht den Mittelwert nach oben. Der Mittelwert muss nicht selbst in der Liste vorkommen.");
+          default:
+            throw new Error(`Fehlende Erklärung für ${kind}`);
+        }
       }
 
       function buildLearningCourse() {
@@ -1520,7 +2862,7 @@
           ["terme", "Terme und Gleichungen", "Finde die Zahl x, bei der beide Seiten gleich viel wert sind.", "Die Waage ausgleichen"],
           ["geometrie", "Geometrie", "Drehe einen Schenkel und beobachte die Winkelgröße.", "Einen Winkel drehen"],
           ["flaechen-volumen", "Fläche und Volumen", "Zähle die Kästchen innen und miss den Rand außen.", "Fläche und Umfang vergleichen"],
-          ["daten", "Daten und Zufall", "Wirf den Würfel und vergleiche die sechs Häufigkeiten.", "Würfeln und Säulen lesen"],
+          ["daten", "Daten und Zufall", "Lies Daten, vergleiche Darstellungen und begründe deine Beobachtung.", "Schulwegdaten vergleichen"],
           ["strategien", "Sachaufgaben", "Kartenkosten und Fahrtkosten: Was rechnest du zuerst?", "Eine Geschichte verändern"],
           ["check", "alle", "Prüfe dein Wissen – ein Rechenschritt nach dem anderen.", "Punkt vor Strich prüfen"]
         ];
@@ -1540,6 +2882,10 @@
         }
         difficulty.append(select);
         startButton.before(difficulty);
+        const extraLabel = document.createElement("label");
+        extraLabel.innerHTML = '<span>Zusatzstoff</span><span><input id="include-extra" type="checkbox"> Auch Zusatzaufgaben anzeigen</span>';
+        startButton.before(extraLabel);
+        extraLabel.querySelector("input").addEventListener("change", () => startPractice(false));
         select.addEventListener("change", () => startPractice(false));
         topicSelect.addEventListener("change", () => startPractice(false));
         startButton.textContent = "Aufgaben neu starten";
@@ -1551,7 +2897,7 @@
         guide.append(guideTitle);
         while (intro.children.length > 1) guide.append(intro.children[1]);
         const short = document.createElement("p");
-        short.textContent = "Wähle unten ein Thema. 1: Probiere aus. 2: Schau dir eine Erklärung an. 3: Löse eine Aufgabe. Du kannst jederzeit zurückgehen.";
+        short.textContent = "Wähle unten ein Thema. 1: Probiere aus. 2: Schau dir eine Erklärung an. 3: Löse eine Aufgabe. In den Bilderhilfen wechselst du mit einem Schieberegler die Darstellung. Ein zweiter Regler zeigt dir die Hilfe Schritt für Schritt. Die Gestaltung unterstützt Schüler bis Klasse 7; der Lernstoff dieser Seite bleibt Klasse 5/6.";
         intro.append(short, guide);
         const sources = document.getElementById("quellen").closest("section");
         const sourceDetails = document.createElement("details");
@@ -1560,19 +2906,19 @@
         sourceDetails.append(sourceTitle);
         while (sources.children.length) sourceDetails.append(sources.firstElementChild);
         sources.append(sourceDetails);
-        let printState = [];
+        let printState = [], printCoachState = [];
         window.addEventListener("beforeprint", () => {
           printState = [...document.querySelectorAll(".chapter, .learning-panel, .chapter details")].map(element => ({element, hidden: element.hidden, open: element.open}));
           printState.forEach(({element}) => { element.hidden = false; if (element.tagName === "DETAILS") element.open = true; });
+          printCoachState = [...document.querySelectorAll('[data-coach-control="help"]')].map(element => ({element, value: element.value}));
+          printCoachState.forEach(({element}) => { element.value = element.max; element.dispatchEvent(new Event("input")); });
         });
         window.addEventListener("afterprint", () => {
           printState.forEach(({element, hidden, open}) => { element.hidden = hidden; if (element.tagName === "DETAILS") element.open = open; });
           printState = [];
+          printCoachState.forEach(({element, value}) => { element.value = value; element.dispatchEvent(new Event("input")); });
+          printCoachState = [];
         });
-
-        const linePicture = document.querySelector("#zahlen .visual");
-        document.querySelector("#negative-zahlen .discovery").before(linePicture);
-        linePicture.querySelector("title").textContent = "Zahlenstrahl mit Zahlen von −4 bis 4";
 
         for (const [id, topic, description, discoveryTitle] of chapterInfo) {
           const chapter = document.getElementById(id);
@@ -1633,6 +2979,8 @@
             }
             card.append(node);
           }
+          const firstLesson = explain.querySelector(".mini-lab")?.closest(".lesson-card") || explain.querySelector(".lesson-card");
+          if (firstLesson) firstLesson.open = true;
           const brief = document.createElement("p");
           brief.className = "chapter-summary";
           brief.textContent = description;
@@ -1717,7 +3065,7 @@
           "word-problem": "Ändere die Kartenanzahl. Die Fahrt wird nur einmal bezahlt.",
           check: "Rechne zuerst die Multiplikation. Wähle dann dein Ergebnis."
         };
-        document.querySelectorAll(".discovery").forEach(lab => {
+        document.querySelectorAll(".discovery[data-lab]").forEach(lab => {
           lab.querySelector(".discovery-intro").textContent = briefs[lab.dataset.lab];
           lab.setAttribute("aria-label", lab.querySelector("h3").textContent);
         });
@@ -1732,18 +3080,13 @@
           "story-quantity": "Anzahl der Karten", "story-price": "Preis je Karte",
           "story-extra": "Fahrtkosten (einmal)"
         };
-        document.querySelectorAll('.discovery input[type="range"]').forEach(field => {
+        document.querySelectorAll('.discovery input[type="range"][data-control]').forEach(field => {
           const label = field.closest("label");
           const value = label.querySelector("output");
           const title = document.createElement("span");
           title.textContent = controlNames[field.dataset.control];
           label.replaceChildren(title, value, field);
         });
-        const chance = document.querySelector('[data-lab="chance"]');
-        const chartNote = document.createElement("p");
-        chartNote.className = "diagram-note";
-        chartNote.textContent = "Unten: Augenzahl 1 bis 6. Oben: Wie oft die Zahl gewürfelt wurde. Säulenhöhe = Häufigkeit; alle Säulen verwenden dieselbe Skala.";
-        chance.querySelector(".discovery-bars").before(chartNote);
       }
     })();
   </script>
