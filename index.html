@@ -2648,7 +2648,7 @@
           flow.className = "coach-flow";
           const notes = [
             ["1 · Gegeben", item.question],
-            ["2 · Gesucht", "Was soll im Antwortfeld stehen: eine Zahl, ein Bruch oder ein Wort? Unterstreiche die Frage."],
+            ["2 · Gesucht", item.question],
             ["3 · Mein Weg", shown ? item.tips[Math.min(shown - 1, 2)] : "Überlege zuerst selbst. Mit dem Hilfe-Regler bekommst du den nächsten Denkanstoß."]
           ];
           notes.forEach(([title, text]) => {

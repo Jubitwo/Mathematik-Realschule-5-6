@@ -64,6 +64,30 @@ test("Fehlerbeispiele erscheinen nicht als gegebene richtige Anteile im Aufgaben
   assert.deepEqual(api.taskFractions(item), [[1, 2], [1, 3]]);
 });
 
+test("Aufgabenformulierung passt zur interaktiven Eingabe", () => {
+  for (const task of api.tasks) {
+    assert.ok(!/Unterstreiche|Was soll im Antwortfeld stehen|eine Zahl, ein Bruch oder ein Wort/i.test(task.question), task.question);
+    assert.ok(task.question.trim().length >= 12, task.question);
+    if (task.answerType === "text") assert.ok(/[A-Za-zIVXLCDM]/i.test(task.answer), task.question);
+    else assert.ok(api.isTaskCorrect(task.answer, task), task.question);
+  }
+});
+
+test("Explizite Grundrechenaufgaben stimmen mit ihrer Rechenoperation überein", () => {
+  const operation = /^Berechne(?: schriftlich)?:?\s*([−-]?\d+(?:,\d+)?)\s*([+−·:])\s*(\d+(?:,\d+)?)\.$/;
+  for (const task of api.tasks) {
+    const match = task.question.match(operation);
+    if (!match) continue;
+    const left = Number(match[1].replace("−", "-").replace(",", "."));
+    const right = Number(match[3].replace(",", "."));
+    const result = match[2] === "+" ? left + right
+      : match[2] === "−" ? left - right
+        : match[2] === "·" ? left * right : left / right;
+    const expected = Number.isInteger(result) ? String(result) : result.toLocaleString("en-US", {maximumFractionDigits: 10});
+    assert.ok(api.isCorrect(task.answer, expected), `${task.question} -> ${task.answer} statt ${expected}`);
+  }
+});
+
 test("Punkt vor Strich und Klammern erzeugen die passenden Plättchenmengen", () => {
   for (let a = 1; a <= 12; a += 1) for (let b = 1; b <= 8; b += 1) for (let c = 1; c <= 8; c += 1) {
     const model = api.orderLearningModel(a, b, c);
