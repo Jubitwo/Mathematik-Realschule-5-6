@@ -16,12 +16,13 @@ const settings = new Function(`return ${settingsSource.slice(
 )}`)();
 const taskSource = script.slice(script.indexOf("      const task = "), script.indexOf("\n      const topicSelect"));
 const functions = ["gcd", "rational", "isCorrect", "isTaskCorrect", "expandTasks", "experimentMission",
-  "orderLearningModel", "unitLearningModel", "experimentModel", "taskFractions"];
+  "orderLearningModel", "unitLearningModel", "experimentModel", "taskFractions",
+  "lessonVisualModels", "taskVisualModels", "fractionVisualModels", "arithmeticVisualModels", "visualFigure", "visualStepCards"];
 const api = new Function(`${taskSource}
   const numberFormat = new Intl.NumberFormat("de-DE");
   ${functions.map(readFunction).join("\n")}
   expandTasks();
-  return {tasks, isCorrect, isTaskCorrect, experimentMission, orderLearningModel, experimentModel, taskFractions};
+  return {tasks, isCorrect, isTaskCorrect, experimentMission, orderLearningModel, experimentModel, taskFractions, lessonVisualModels, taskVisualModels};
 `)();
 
 test("Lernseite enthält gültiges JavaScript", () => {
@@ -31,8 +32,8 @@ test("Lernseite enthält gültiges JavaScript", () => {
 });
 
 test("Alle Aufgaben haben vollständige Angaben, drei Tipps und eine akzeptierte Lösung", () => {
-  assert.equal(api.tasks.length, 211);
-  assert.equal(api.tasks.filter(task => !task.extra).length, 206);
+  assert.equal(api.tasks.length, 213);
+  assert.equal(api.tasks.filter(task => !task.extra).length, 208);
   for (const task of api.tasks) {
     assert.ok(task.question.trim(), task.topic);
     assert.ok(task.explanation.trim(), task.question);
@@ -85,6 +86,27 @@ test("Explizite Grundrechenaufgaben stimmen mit ihrer Rechenoperation überein",
         : match[2] === "·" ? left * right : left / right;
     const expected = Number.isInteger(result) ? String(result) : result.toLocaleString("en-US", {maximumFractionDigits: 10});
     assert.ok(api.isCorrect(task.answer, expected), `${task.question} -> ${task.answer} statt ${expected}`);
+  }
+});
+
+test("Jeder Aufgaben- und Erklärungsbereich besitzt eine visuelle Lernhilfe", () => {
+  for (const [kind, fields] of Object.entries(settings)) {
+    const values = fields.map(([, min, , initial]) => Array.isArray(min) ? 0 : initial);
+    assert.ok(api.experimentModel(kind, values).svg.trim(), `Keine Hauptgrafik für ${kind}`);
+  }
+  for (const task of api.tasks) {
+    assert.ok(api.taskVisualModels(task).length > 0, `Keine Aufgabenhilfe für ${task.question}`);
+  }
+});
+
+test("Jedes Thema bietet eine aufsteigende Übungsfolge", () => {
+  const topics = new Map();
+  for (const task of api.tasks.filter(task => !task.extra)) {
+    if (!topics.has(task.topic)) topics.set(task.topic, new Set());
+    topics.get(task.topic).add(task.level);
+  }
+  for (const [topic, levels] of topics) {
+    assert.deepEqual([...levels].sort(), ["Knifflig", "Leicht", "Mittel"], topic);
   }
 });
 

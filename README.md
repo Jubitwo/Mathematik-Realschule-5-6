@@ -1,6 +1,6 @@
 # Mathematik – Realschule Klasse 5–6
 
-Interaktive Lernseite für die Realschule in Baden-Württemberg mit 14 Themenkapiteln, 48 interaktiven Erklärungsstationen (einschließlich der Datenerkundung unter „Entdecken“) und 211 Aufgaben (206 reguläre und 5 zuschaltbare Zusatzaufgaben).
+Interaktive Lernseite für die Realschule in Baden-Württemberg mit 14 Themenkapiteln, 48 interaktiven Erklärungsstationen (einschließlich der Datenerkundung unter „Entdecken“) und 213 Aufgaben (208 reguläre und 5 zuschaltbare Zusatzaufgaben).
 
 ## Lernen und üben
 
@@ -48,4 +48,4 @@ Die Regressionstests benötigen nur Node.js, keine zusätzlichen Pakete:
 node --test learning.test.cjs
 ```
 
-Sie prüfen unter anderem alle 211 hinterlegten Lösungen, die drei Tipps pro Aufgabe, Bruchformate, offene Intervalle, die Plättchenanzahl bei Punkt-vor-Strich-Aufgaben sowie Start- und Randzustände sämtlicher Reglerstationen. Die visuelle Darstellung und die Bedienung werden zusätzlich im Browser geprüft.
+Sie prüfen unter anderem alle 213 hinterlegten Lösungen, die drei Tipps pro Aufgabe, Bruchformate, offene Intervalle, die Plättchenanzahl bei Punkt-vor-Strich-Aufgaben, die visuelle Hilfe jedes Themenmodells sowie Start- und Randzustände sämtlicher Reglerstationen. Die visuelle Darstellung und die Bedienung werden zusätzlich im Browser geprüft.
